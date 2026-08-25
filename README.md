@@ -32,3 +32,9 @@ Importa el repositorio en Vercel y agrega las mismas dos variables en **Settings
 El canal Realtime escucha cambios en `plans`, `contributions` y `activities`, por lo que un plan, aporte o actividad nueva aparece en las dos sesiones abiertas sin recargar.
 
 Para habilitar el calendario interactivo, vuelve a ejecutar [`supabase/schema.sql`](supabase/schema.sql) en el SQL Editor. El script crea la tabla `activities` y es seguro de ejecutar aunque las tablas anteriores ya existan.
+
+## Módulo Mi ciclo
+
+La sección **Mi ciclo** permite registrar flujo, síntomas y estado de ánimo por día. Sus tablas (`user_preferences`, `cycles` y `daily_logs`) usan políticas RLS para que cada cuenta solo pueda leer sus propios datos.
+
+El motor calcula el promedio móvil de los últimos 6 ciclos completos, ignora ciclos menores de 21 o mayores de 45 días y usa 28 días como valor inicial. También muestra el siguiente periodo estimado, ovulación y ventana fértil. Al registrar flujo después de al menos 10 días del ciclo actual, cierra ese ciclo y crea el siguiente automáticamente.

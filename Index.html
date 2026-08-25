@@ -184,10 +184,10 @@
   .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
   .cal-month{font-family:var(--font-display);font-size:20px;font-weight:600;text-transform:capitalize;}
   .cal-nav{display:flex;gap:6px;}
-  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:78px;gap:6px;}
   .cal-dow{text-align:center;font-size:11px;font-weight:700;color:var(--ink-faint);padding-bottom:6px;text-transform:uppercase;}
   .cal-day{
-    aspect-ratio:1/0.92;border-radius:11px;padding:7px 8px;background:var(--surface-alt);
+    height:78px;min-height:78px;border-radius:11px;padding:7px 8px;background:var(--surface-alt);
     display:flex;flex-direction:column;justify-content:space-between;font-size:12.5px;color:var(--ink-soft);
     position:relative;cursor:pointer;transition:background .15s ease,box-shadow .15s ease;
   }
@@ -198,7 +198,7 @@
   .cal-dots{display:flex;gap:3px;flex-wrap:wrap;}
   .cal-dot{width:7px;height:7px;border-radius:50%;background:var(--gold);}
   .cal-day .cal-emojis{font-size:13px;line-height:1;}
-  .cal-activities{display:flex;flex-direction:column;gap:3px;overflow:hidden;margin-top:3px;}
+  .cal-activities{display:flex;flex-direction:column;gap:3px;overflow:hidden;margin-top:3px;max-height:48px;}
   .cal-activity{display:flex;align-items:center;gap:4px;min-width:0;font-size:10px;line-height:1.2;color:var(--ink);font-weight:700;}
   .cal-activity-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;background:var(--activity-color,var(--gold));}
   .cal-activity-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -256,8 +256,14 @@
   .quote-highlight b{color:#fff;}
 
   .contrib-list{display:flex;flex-direction:column;gap:8px;margin-top:6px;max-height:160px;overflow-y:auto;}
-  .contrib-item{display:flex;justify-content:space-between;font-size:13px;padding:8px 11px;background:var(--surface-alt);border-radius:9px;}
+  .contrib-item{display:flex;align-items:center;gap:8px;font-size:13px;padding:8px 11px;background:var(--surface-alt);border-radius:9px;}
   .contrib-item b{font-family:var(--font-mono);color:var(--teal-2);}
+  .contrib-item-main{display:flex;justify-content:space-between;align-items:center;gap:10px;min-width:0;flex:1;}
+  .contrib-item-main span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .contrib-actions{display:flex;gap:4px;flex-shrink:0;}
+  .contrib-action{border:0;background:transparent;color:var(--ink-faint);font-size:12px;padding:4px 6px;border-radius:6px;}
+  .contrib-action:hover{background:var(--surface);color:var(--ink);}
+  .contrib-action.delete:hover{background:var(--coral-soft);color:var(--coral);}
 
   .toast{
     position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);
@@ -276,6 +282,45 @@
   .auth-error{color:var(--coral);font-size:13px;min-height:20px;margin-top:10px;}
   .user-menu{display:flex;align-items:center;gap:10px;color:var(--ink-soft);font-size:12px;}
   .user-email{max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .menstrual-layout{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(280px,1fr);gap:22px;align-items:start;}
+  .cycle-calendar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px;box-shadow:var(--shadow-sm);}
+  .cycle-legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:18px;color:var(--ink-soft);font-size:11.5px;}
+  .cycle-legend span{display:inline-flex;align-items:center;gap:5px;}
+  .legend-dot{width:9px;height:9px;border-radius:50%;background:var(--coral);}
+  .legend-ring{width:11px;height:11px;border:2px solid var(--coral);border-radius:50%;}
+  .legend-blue{width:10px;height:10px;border-radius:50%;background:#5486a6;}
+  .cycle-grid .cal-day{height:86px;min-height:86px;justify-content:flex-start;gap:4px;}
+  .cycle-grid{grid-auto-rows:86px;}
+  .cycle-day-number{display:flex;align-items:center;justify-content:space-between;font-family:var(--font-mono);font-weight:600;}
+  .cycle-day-number .flow-mark{width:8px;height:8px;border-radius:50%;background:var(--coral);}
+  .cycle-day.predicted{box-shadow:inset 0 0 0 2px var(--coral);background:#fff9f6;}
+  .cycle-day.fertile{background:#eaf3f7;}
+  .cycle-day.ovulation{background:#d8e9f1;box-shadow:inset 0 0 0 2px #5486a6;}
+  .cycle-day.today .cycle-day-number{color:var(--teal-2);}
+  button.cycle-day{font-family:inherit;text-align:left;border:0;width:100%;}
+  .cycle-day-label{font-size:9.5px;color:#5486a6;font-weight:800;text-transform:uppercase;letter-spacing:.2px;}
+  .tracking-card,.prediction-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px;box-shadow:var(--shadow-sm);}
+  .prediction-card{background:var(--teal);color:#fff;border:0;}
+  .prediction-card .agenda-title{color:#fff;}
+  .prediction-main{font-family:var(--font-display);font-size:27px;line-height:1.1;margin:8px 0 5px;}
+  .prediction-sub{color:#c7d6cc;font-size:13px;line-height:1.45;}
+  .prediction-meta{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:18px;}
+  .prediction-meta div{padding:10px;background:rgba(255,255,255,.1);border-radius:10px;}
+  .prediction-meta small{display:block;color:#b7c6be;font-size:10px;text-transform:uppercase;letter-spacing:.5px;font-weight:700;}
+  .prediction-meta b{display:block;margin-top:4px;font-family:var(--font-mono);font-size:12px;}
+  .tracking-card{margin-top:16px;}
+  .tracking-card .field{margin-bottom:12px;}
+  .choice-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+  .choice-grid label{position:relative;}
+  .choice-grid input{position:absolute;opacity:0;pointer-events:none;}
+  .choice-grid span{display:flex;align-items:center;justify-content:center;min-height:38px;padding:5px;border:1px solid var(--border);border-radius:9px;font-size:11px;color:var(--ink-soft);text-align:center;cursor:pointer;}
+  .choice-grid input:checked+span{background:var(--coral-soft);border-color:var(--coral);color:var(--coral);font-weight:800;}
+  .chip-grid{display:flex;flex-wrap:wrap;gap:6px;}
+  .chip-grid label{position:relative;}
+  .chip-grid input{position:absolute;opacity:0;pointer-events:none;}
+  .chip-grid span{display:block;padding:7px 9px;border:1px solid var(--border);border-radius:99px;font-size:11px;color:var(--ink-soft);cursor:pointer;}
+  .chip-grid input:checked+span{background:var(--teal-soft);border-color:var(--teal-2);color:var(--teal-2);font-weight:800;}
+  .cycle-note{font-size:12px;color:var(--ink-faint);line-height:1.45;margin:14px 0 0;}
   .activity-list{display:flex;flex-direction:column;gap:7px;margin:10px 0 18px;max-height:150px;overflow-y:auto;}
   .activity-item{display:flex;align-items:center;gap:9px;padding:9px 10px;background:var(--surface-alt);border-radius:9px;}
   .activity-item-dot{width:8px;height:8px;border-radius:50%;background:var(--activity-color,var(--gold));flex-shrink:0;}
@@ -325,6 +370,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
         Calendario
       </button>
+      <button class="nav-item" data-view="menstrual">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.35-7-10a4 4 0 017-2.65A4 4 0 0119 11c0 5.65-7 10-7 10z"/><path d="M8 4h.01M16 4h.01"/></svg>
+        Mi ciclo
+      </button>
     </nav>
     <div class="sidebar-foot">
       <div class="sidebar-stat">Ahorrado en total<br><b id="sidebarTotal">$0</b></div>
@@ -364,7 +413,7 @@
   /* ---------------- DATA LAYER ---------------- */
   let supabase = null;
   let realtimeChannel = null;
-  let state = { plans: [], activities: [] };
+  let state = { plans: [], activities: [], menstrual: { preferences: null, cycles: [], dailyLogs: [] } };
   let currentView = 'dashboard';
   let calDate = new Date();
   let activeDetailId = null;
@@ -384,7 +433,7 @@
 
   function uid(){ return 'p_' + Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
 
-  function fromRows(plans, contributions, activities){
+  function fromRows(plans, contributions, activities, preferences, cycles, dailyLogs){
     const grouped = contributions.reduce((map, contribution)=>{
       (map[contribution.plan_id] ||= []).push({id:contribution.id, amount:Number(contribution.amount), date:contribution.date, note:contribution.note||''});
       return map;
@@ -396,19 +445,29 @@
     })), activities:(activities||[]).map(activity=>({
       id:activity.id, title:activity.title, date:activity.date, time:activity.time||'',
       note:activity.note||'', color:activity.color||'gold'
-    }))};
+    })), menstrual:{
+      preferences:preferences || {default_cycle_length:28,default_period_length:5},
+      cycles:(cycles||[]).map(cycle=>({id:cycle.id,userId:cycle.user_id,startDate:cycle.start_date,endDate:cycle.end_date,cycleLength:cycle.cycle_length})),
+      dailyLogs:(dailyLogs||[]).map(log=>({id:log.id,userId:log.user_id,date:log.date,flowIntensity:log.flow_intensity,symptoms:log.symptoms||[],mood:log.mood||[]}))
+    }};
   }
 
   async function loadData(){
-    const [{data:plans,error:plansError},{data:contributions,error:contributionsError},{data:activities,error:activitiesError}] = await Promise.all([
+    const [{data:plans,error:plansError},{data:contributions,error:contributionsError},{data:activities,error:activitiesError},{data:preferences,error:preferencesError},{data:cycles,error:cyclesError},{data:dailyLogs,error:logsError}] = await Promise.all([
       supabase.from('plans').select('*').order('target_date'),
       supabase.from('contributions').select('*').order('date',{ascending:false}),
-      supabase.from('activities').select('*').order('date').order('time')
+      supabase.from('activities').select('*').order('date').order('time'),
+      supabase.from('user_preferences').select('*').maybeSingle(),
+      supabase.from('cycles').select('*').order('start_date',{ascending:false}),
+      supabase.from('daily_logs').select('*').order('date',{ascending:false})
     ]);
     if(plansError) throw plansError;
     if(contributionsError) throw contributionsError;
     if(activitiesError) throw activitiesError;
-    state = fromRows(plans||[], contributions||[], activities||[]);
+    if(preferencesError) throw preferencesError;
+    if(cyclesError) throw cyclesError;
+    if(logsError) throw logsError;
+    state = fromRows(plans||[], contributions||[], activities||[], preferences, cycles, dailyLogs);
   }
 
   function subscribeToChanges(){
@@ -417,6 +476,9 @@
       .on('postgres_changes',{event:'*',schema:'public',table:'plans'},refreshFromRealtime)
       .on('postgres_changes',{event:'*',schema:'public',table:'contributions'},refreshFromRealtime)
       .on('postgres_changes',{event:'*',schema:'public',table:'activities'},refreshFromRealtime)
+      .on('postgres_changes',{event:'*',schema:'public',table:'user_preferences'},refreshFromRealtime)
+      .on('postgres_changes',{event:'*',schema:'public',table:'cycles'},refreshFromRealtime)
+      .on('postgres_changes',{event:'*',schema:'public',table:'daily_logs'},refreshFromRealtime)
       .subscribe();
   }
 
@@ -451,6 +513,16 @@
     if(error) throw error;
   }
 
+  async function updateContribution(id,data){
+    const {error} = await supabase.from('contributions').update({amount:Number(data.amount),date:data.date,note:data.note||''}).eq('id',id);
+    if(error) throw error;
+  }
+
+  async function removeContribution(id){
+    const {error} = await supabase.from('contributions').delete().eq('id',id);
+    if(error) throw error;
+  }
+
   async function removePlan(id){
     const {error} = await supabase.from('plans').delete().eq('id',id);
     if(error) throw error;
@@ -464,6 +536,52 @@
   async function removeActivity(id){
     const {error} = await supabase.from('activities').delete().eq('id',id);
     if(error) throw error;
+  }
+
+  /* MenstrualEngineService: predicciones deterministas y cierre automático. */
+  const MenstrualEngineService = {
+    toDate(value){ return new Date(`${value}T00:00:00`); },
+    toISO(date){ return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`; },
+    addDays(value, days){ const date=this.toDate(value); date.setDate(date.getDate()+days); return this.toISO(date); },
+    daysBetween(start,end){ return Math.round((this.toDate(end)-this.toDate(start))/86400000); },
+    getCurrentCycle(cycles){ return cycles.filter(cycle=>!cycle.endDate).sort((a,b)=>b.startDate.localeCompare(a.startDate))[0] || null; },
+    getAverageCycleLength(cycles, preferences){
+      // Solo los últimos 6 ciclos completados y dentro de 21-45 días evitan sesgar la predicción.
+      const valid = cycles.filter(cycle=>cycle.endDate && cycle.cycleLength >= 21 && cycle.cycleLength <= 45).slice(0,6);
+      return valid.length ? Math.round(valid.reduce((sum,cycle)=>sum+cycle.cycleLength,0)/valid.length) : (preferences?.default_cycle_length || 28);
+    },
+    getPrediction(cycles, preferences, today=todayISO()){
+      const current=this.getCurrentCycle(cycles);
+      if(!current) return {current:null,cycleDay:null,average:this.getAverageCycleLength(cycles,preferences),nextPeriod:null,ovulation:null,fertileStart:null,fertileEnd:null,periodEnd:null};
+      const average=this.getAverageCycleLength(cycles,preferences);
+      const nextPeriod=this.addDays(current.startDate,average);
+      return {current,cycleDay:Math.max(1,this.daysBetween(current.startDate,today)+1),average,nextPeriod,ovulation:this.addDays(nextPeriod,-14),fertileStart:this.addDays(nextPeriod,-19),fertileEnd:this.addDays(nextPeriod,-13),periodEnd:this.addDays(nextPeriod,(preferences?.default_period_length||5)-1)};
+    },
+    shouldCloseCycle(current, log){ return log.flowIntensity!=='none' && current && this.daysBetween(current.startDate,log.date)>=10; }
+  };
+
+  async function saveDailyLog(data){
+    const user=(await supabase.auth.getUser()).data.user;
+    const current=MenstrualEngineService.getCurrentCycle(state.menstrual.cycles);
+    const log={user_id:user.id,date:data.date,flow_intensity:data.flowIntensity,symptoms:data.symptoms||[],mood:data.mood||[]};
+    const {error:logError}=await supabase.from('daily_logs').upsert(log,{onConflict:'user_id,date'});
+    if(logError) throw logError;
+    if(MenstrualEngineService.shouldCloseCycle(current,data)){
+      const {error:closeError}=await supabase.from('cycles').update({end_date:data.date,cycle_length:MenstrualEngineService.daysBetween(current.startDate,data.date)}).eq('id',current.id);
+      if(closeError) throw closeError;
+      const {error:newCycleError}=await supabase.from('cycles').insert({user_id:user.id,start_date:data.date});
+      if(newCycleError) throw newCycleError;
+    }
+    await loadData();
+  }
+
+  async function createFirstCycle(date){
+    const user=(await supabase.auth.getUser()).data.user;
+    const current=MenstrualEngineService.getCurrentCycle(state.menstrual.cycles);
+    if(current) return;
+    const {error}=await supabase.from('cycles').insert({user_id:user.id,start_date:date});
+    if(error) throw error;
+    await loadData();
   }
 
   /* ---------------- HELPERS ---------------- */
@@ -532,7 +650,7 @@
 
   function render(){
     const main = document.getElementById('main');
-    const content = currentView==='dashboard' ? renderDashboard() : currentView==='plans' ? renderPlansView() : renderCalendarView();
+    const content = currentView==='dashboard' ? renderDashboard() : currentView==='plans' ? renderPlansView() : currentView==='calendar' ? renderCalendarView() : renderMenstrualView();
     main.innerHTML = renderSessionBar() + content;
     attachViewEvents();
     updateSidebarStat();
@@ -774,6 +892,39 @@
     `;
   }
 
+  const FLOW_OPTIONS=[['none','Sin flujo'],['light','Ligero'],['medium','Medio'],['heavy','Abundante']];
+  const SYMPTOM_OPTIONS=[['cramps','Cólicos'],['headache','Dolor de cabeza'],['tender_breasts','Pecho sensible'],['backache','Dolor lumbar'],['fatigue','Cansancio']];
+  const MOOD_OPTIONS=[['happy','Feliz'],['sad','Triste'],['sensitive','Sensible'],['calm','Tranquila'],['irritable','Irritable']];
+
+  function renderMenstrualView(){
+    const menstrual=state.menstrual;
+    const prediction=MenstrualEngineService.getPrediction(menstrual.cycles,menstrual.preferences);
+    const y=calDate.getFullYear(),m=calDate.getMonth(),firstDow=new Date(y,m,1).getDay(),daysInMonth=new Date(y,m+1,0).getDate();
+    const today=todayISO();
+    const logsByDate=Object.fromEntries(menstrual.dailyLogs.map(log=>[log.date,log]));
+    const predictedDates=new Set();
+    if(prediction.nextPeriod){ for(let day=0;day<(menstrual.preferences?.default_period_length||5);day++) predictedDates.add(MenstrualEngineService.addDays(prediction.nextPeriod,day)); }
+    let cells='';
+    for(let i=0;i<firstDow;i++) cells+='<div class="cal-day empty"></div>';
+    for(let day=1;day<=daysInMonth;day++){
+      const date=`${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`,log=logsByDate[date];
+      const fertile=prediction.fertileStart&&date>=prediction.fertileStart&&date<=prediction.fertileEnd;
+      const ovulation=date===prediction.ovulation, predicted=predictedDates.has(date), hasFlow=log&&log.flowIntensity!=='none';
+      cells+=`<button class="cal-day cycle-day ${date===today?'today ':''}${fertile?'fertile ':''}${ovulation?'ovulation ':''}${predicted?'predicted':''}" data-action="daily-log" data-date="${date}" title="Registrar día">
+        <span class="cycle-day-number"><span>${day}</span>${hasFlow?'<span class="flow-mark"></span>':''}</span>
+        ${ovulation?'<span class="cycle-day-label">Ovulación</span>':''}
+        ${fertile&&!ovulation?'<span class="cycle-day-label">Fértil</span>':''}
+      </button>`;
+    }
+    const periodDays=menstrual.dailyLogs.filter(log=>log.flowIntensity!=='none').length;
+    return `<div class="topbar"><div><h1 class="page-title">Mi ciclo</h1><p class="page-sub">Registra cómo te sientes y conoce tus patrones con privacidad por cuenta.</p></div><button class="btn btn-primary" data-action="daily-log" data-date="${today}">${iconPlus()} Registrar hoy</button></div>
+      <div class="menstrual-layout">
+        <div class="cycle-calendar"><div class="cal-head"><div class="cal-month">${MONTHS[m]} ${y}</div><div class="cal-nav"><button class="btn-icon" data-action="cycle-prev">${iconChevron('left')}</button><button class="btn-icon" data-action="cycle-today" title="Hoy">${iconDot()}</button><button class="btn-icon" data-action="cycle-next">${iconChevron('right')}</button></div></div><div class="cal-grid cycle-grid">${DOWS.map(d=>`<div class="cal-dow">${d}</div>`).join('')}${cells}</div><div class="cycle-legend"><span><i class="legend-dot"></i>Periodo registrado</span><span><i class="legend-ring"></i>Periodo estimado</span><span><i class="legend-blue"></i>Ovulación / fértil</span></div></div>
+        <div><div class="prediction-card"><h3 class="agenda-title">Tu ciclo</h3>${prediction.current?`<div class="prediction-main">Día ${prediction.cycleDay} de tu ciclo</div><div class="prediction-sub">Tu periodo llega en ${Math.max(0,MenstrualEngineService.daysBetween(today,prediction.nextPeriod))} días aproximadamente.</div><div class="prediction-meta"><div><small>Próximo periodo</small><b>${fmtDate(prediction.nextPeriod)}</b></div><div><small>Promedio</small><b>${prediction.average} días</b></div><div><small>Ovulación</small><b>${fmtDate(prediction.ovulation)}</b></div><div><small>Ventana fértil</small><b>${fmtDate(prediction.fertileStart)} - ${fmtDate(prediction.fertileEnd)}</b></div></div>`:'<div class="prediction-main">Comienza tu seguimiento</div><div class="prediction-sub">Registra tu primer día de sangrado para calcular predicciones personalizadas.</div>'}<p class="cycle-note" style="color:#c7d6cc;">Promedio basado en los últimos 6 ciclos completos. Se ignoran ciclos menores de 21 o mayores de 45 días.</p></div>
+          <div class="tracking-card"><h3 class="agenda-title">Registro rápido</h3><p class="cycle-note">Selecciona una fecha del calendario o registra hoy.</p><button class="btn btn-gold" data-action="daily-log" data-date="${today}" style="margin-top:14px;width:100%;justify-content:center;">Registrar estado de hoy</button><div class="cycle-note">${periodDays?`${periodDays} día(s) con flujo registrado en tus datos.`:'Aún no hay días con flujo registrado.'}</div></div></div>
+      </div>`;
+  }
+
   /* ---------------- ICONS ---------------- */
   function iconPlus(){ return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>`; }
   function iconEdit(){ return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>`; }
@@ -890,7 +1041,10 @@
 
       <h3 class="agenda-title">Historial de aportes</h3>
       <div class="contrib-list">
-        ${contribs.length ? contribs.map(c=>`<div class="contrib-item"><span>${fmtDate(c.date)}${c.note? ' · '+escapeHtml(c.note):''}</span><b>${fmtMoney(c.amount)}</b></div>`).join('') : `<div class="muted-empty">Aún no registras aportes.</div>`}
+        ${contribs.length ? contribs.map(c=>`<div class="contrib-item">
+          <div class="contrib-item-main"><span>${fmtDate(c.date)}${c.note? ' · '+escapeHtml(c.note):''}</span><b>${fmtMoney(c.amount)}</b></div>
+          <div class="contrib-actions"><button class="contrib-action" data-action="edit-contribution" data-id="${c.id}" title="Editar">Editar</button><button class="contrib-action delete" data-action="delete-contribution" data-id="${c.id}" title="Eliminar">✕</button></div>
+        </div>`).join('') : `<div class="muted-empty">Aún no registras aportes.</div>`}
       </div>
 
       <div class="modal-actions">
@@ -942,6 +1096,34 @@
     });
   }
 
+  function openEditContribution(planId, contributionId){
+    const plan = state.plans.find(item=>item.id===planId);
+    const contribution = plan?.contributions.find(item=>item.id===contributionId);
+    if(!plan || !contribution) return;
+    openModal(`
+      <div class="modal-head"><h2 class="modal-title">Editar aporte</h2><button class="modal-close" data-action="close-modal">✕</button></div>
+      <p style="color:var(--ink-soft);font-size:13.5px;margin-top:-6px;">Para <b>${escapeHtml(plan.name)}</b></p>
+      <form id="editContributionForm">
+        <div class="field"><label>Monto</label><input type="number" name="amount" min="0.01" step="0.01" required value="${contribution.amount}"></div>
+        <div class="field"><label>Fecha</label><input type="date" name="date" required value="${contribution.date}"></div>
+        <div class="field"><label>Nota (opcional)</label><input type="text" name="note" value="${escapeHtml(contribution.note||'')}"></div>
+        <div class="modal-actions"><button type="button" class="btn btn-ghost" data-action="close-modal">Cancelar</button><button type="submit" class="btn btn-primary">Guardar cambios</button></div>
+      </form>
+    `);
+    document.getElementById('editContributionForm').addEventListener('submit', async(e)=>{
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.target).entries());
+      try{ await updateContribution(contributionId,data); await loadData(); showToast('Aporte actualizado'); openDetail(planId); }
+      catch(error){ showToast('No se pudo actualizar el aporte.'); }
+    });
+  }
+
+  async function deleteContribution(planId, contributionId){
+    if(!confirm('¿Eliminar este aporte?')) return;
+    try{ await removeContribution(contributionId); await loadData(); showToast('Aporte eliminado'); openDetail(planId); }
+    catch(error){ showToast('No se pudo eliminar el aporte.'); }
+  }
+
   function openActivityForm(date){
     activeActivityDate = date;
     const activities = state.activities.filter(activity=>activity.date===date).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
@@ -974,6 +1156,21 @@
     });
   }
 
+  function openDailyTracking(date){
+    const existing=state.menstrual.dailyLogs.find(log=>log.date===date);
+    const selectedFlow=existing?.flowIntensity||'none';
+    const flow=FLOW_OPTIONS.map(([value,label])=>`<label><input type="radio" name="flowIntensity" value="${value}" ${selectedFlow===value?'checked':''}><span>${label}</span></label>`).join('');
+    const choices=(items,selected,name)=>items.map(([value,label])=>`<label><input type="checkbox" name="${name}" value="${value}" ${(selected||[]).includes(value)?'checked':''}><span>${label}</span></label>`).join('');
+    openModal(`<div class="modal-head"><h2 class="modal-title">Registro del ${fmtDate(date)}</h2><button class="modal-close" data-action="close-modal">✕</button></div>
+      <form id="dailyTrackingForm"><div class="field"><label>Flujo</label><div class="choice-grid">${flow}</div></div><div class="field"><label>Estado de ánimo</label><div class="chip-grid">${choices(MOOD_OPTIONS,existing?.mood,'mood')}</div></div><div class="field"><label>Síntomas</label><div class="chip-grid">${choices(SYMPTOM_OPTIONS,existing?.symptoms,'symptoms')}</div></div><div class="modal-actions"><button type="button" class="btn btn-ghost" data-action="close-modal">Cancelar</button><button type="submit" class="btn btn-primary">Guardar registro</button></div></form>`);
+    document.getElementById('dailyTrackingForm').addEventListener('submit',async(event)=>{
+      event.preventDefault();
+      const form=new FormData(event.target), data={date,flowIntensity:form.get('flowIntensity')||'none',mood:form.getAll('mood'),symptoms:form.getAll('symptoms')};
+      try{ await saveDailyLog(data); showToast('Registro guardado'); closeModal(); render(); }
+      catch(error){ showToast('No se pudo guardar el registro.'); }
+    });
+  }
+
   function deletePlan(id){
     if(!confirm('¿Eliminar este plan y su historial de aportes?')) return;
     removePlan(id).then(async()=>{
@@ -989,6 +1186,9 @@
     document.querySelectorAll('[data-action="cal-prev"]').forEach(b=>b.addEventListener('click', ()=>{ calDate.setMonth(calDate.getMonth()-1); render(); }));
     document.querySelectorAll('[data-action="cal-next"]').forEach(b=>b.addEventListener('click', ()=>{ calDate.setMonth(calDate.getMonth()+1); render(); }));
     document.querySelectorAll('[data-action="cal-today"]').forEach(b=>b.addEventListener('click', ()=>{ calDate = new Date(); render(); }));
+    document.querySelectorAll('[data-action="cycle-prev"]').forEach(b=>b.addEventListener('click', ()=>{ calDate.setMonth(calDate.getMonth()-1); render(); }));
+    document.querySelectorAll('[data-action="cycle-next"]').forEach(b=>b.addEventListener('click', ()=>{ calDate.setMonth(calDate.getMonth()+1); render(); }));
+    document.querySelectorAll('[data-action="cycle-today"]').forEach(b=>b.addEventListener('click', ()=>{ calDate = new Date(); render(); }));
   }
 
   document.getElementById('nav').addEventListener('click', (e)=>{
@@ -1007,7 +1207,16 @@
     else if(action==='contribute') openContribute(id);
     else if(action==='delete-plan') deletePlan(id);
     else if(action==='add-activity') openActivityForm(btn.dataset.date);
+    else if(action==='daily-log') openDailyTracking(btn.dataset.date);
     else if(action==='delete-activity') removeActivity(id).then(async()=>{ await loadData(); openActivityForm(activeActivityDate); }).catch(()=>showToast('No se pudo eliminar la actividad.'));
+    else if(action==='edit-contribution'){
+      const plan = state.plans.find(item=>item.contributions.some(contribution=>contribution.id===id));
+      if(plan) openEditContribution(plan.id,id);
+    }
+    else if(action==='delete-contribution'){
+      const plan = state.plans.find(item=>item.contributions.some(contribution=>contribution.id===id));
+      if(plan) deleteContribution(plan.id,id);
+    }
     else if(action==='sign-out') supabase.auth.signOut();
     else if(action==='close-modal') closeModal();
   });
