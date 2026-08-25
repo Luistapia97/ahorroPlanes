@@ -22,8 +22,20 @@ create table if not exists public.contributions (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.activities (
+  id uuid primary key default gen_random_uuid(),
+  title text not null check (char_length(title) between 1 and 80),
+  date date not null,
+  time time,
+  note text not null default '',
+  color text not null default 'gold' check (color in ('gold', 'teal', 'coral', 'sage')),
+  created_by uuid not null references auth.users(id) default auth.uid(),
+  created_at timestamptz not null default now()
+);
+
 alter table public.plans enable row level security;
 alter table public.contributions enable row level security;
+alter table public.activities enable row level security;
 
 drop policy if exists "authenticated users can read plans" on public.plans;
 create policy "authenticated users can read plans" on public.plans for select to authenticated using (true);
@@ -43,8 +55,18 @@ create policy "authenticated users can update contributions" on public.contribut
 drop policy if exists "authenticated users can delete contributions" on public.contributions;
 create policy "authenticated users can delete contributions" on public.contributions for delete to authenticated using (true);
 
+drop policy if exists "authenticated users can read activities" on public.activities;
+create policy "authenticated users can read activities" on public.activities for select to authenticated using (true);
+drop policy if exists "authenticated users can create activities" on public.activities;
+create policy "authenticated users can create activities" on public.activities for insert to authenticated with check (created_by = auth.uid());
+drop policy if exists "authenticated users can update activities" on public.activities;
+create policy "authenticated users can update activities" on public.activities for update to authenticated using (true) with check (true);
+drop policy if exists "authenticated users can delete activities" on public.activities;
+create policy "authenticated users can delete activities" on public.activities for delete to authenticated using (true);
+
 alter table public.plans replica identity full;
 alter table public.contributions replica identity full;
+alter table public.activities replica identity full;
 
 do $$
 begin
@@ -72,6 +94,19 @@ begin
       and c.relname = 'contributions'
   ) then
     alter publication supabase_realtime add table public.contributions;
+  end if;
+
+  if not exists (
+    select 1
+    from pg_publication_rel pr
+    join pg_class c on c.oid = pr.prrelid
+    join pg_namespace n on n.oid = c.relnamespace
+    join pg_publication p on p.oid = pr.prpubid
+    where p.pubname = 'supabase_realtime'
+      and n.nspname = 'public'
+      and c.relname = 'activities'
+  ) then
+    alter publication supabase_realtime add table public.activities;
   end if;
 end
 $$;

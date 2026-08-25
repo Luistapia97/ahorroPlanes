@@ -29,4 +29,6 @@ Configura `SUPABASE_URL` y `SUPABASE_ANON_KEY` como variables de entorno del pro
 
 Importa el repositorio en Vercel y agrega las mismas dos variables en **Settings > Environment Variables** para Preview y Production. Cada usuario debe iniciar sesión con una de las dos cuentas creadas en Supabase.
 
-El canal Realtime escucha cambios en `plans` y `contributions`, por lo que un aporte o un plan nuevo aparece en las dos sesiones abiertas sin recargar.
+El canal Realtime escucha cambios en `plans`, `contributions` y `activities`, por lo que un plan, aporte o actividad nueva aparece en las dos sesiones abiertas sin recargar.
+
+Para habilitar el calendario interactivo, vuelve a ejecutar [`supabase/schema.sql`](supabase/schema.sql) en el SQL Editor. El script crea la tabla `activities` y es seguro de ejecutar aunque las tablas anteriores ya existan.
