@@ -57,10 +57,17 @@ create table if not exists public.daily_logs (
   flow_intensity text not null default 'none' check (flow_intensity in ('none', 'light', 'medium', 'heavy')),
   symptoms text[] not null default '{}',
   mood text[] not null default '{}',
+  had_sex boolean not null default false,
+  protection_used boolean,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (user_id, date)
 );
+
+alter table public.daily_logs add column if not exists had_sex boolean not null default false;
+alter table public.daily_logs add column if not exists protection_used boolean;
+alter table public.daily_logs drop constraint if exists daily_logs_sex_protection_check;
+alter table public.daily_logs add constraint daily_logs_sex_protection_check check ((had_sex = false and protection_used is null) or had_sex = true);
 
 alter table public.plans enable row level security;
 alter table public.contributions enable row level security;

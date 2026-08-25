@@ -289,10 +289,13 @@
   .legend-dot{width:9px;height:9px;border-radius:50%;background:var(--coral);}
   .legend-ring{width:11px;height:11px;border:2px solid var(--coral);border-radius:50%;}
   .legend-blue{width:10px;height:10px;border-radius:50%;background:#5486a6;}
+  .legend-sex{font-size:12px;line-height:1;}
   .cycle-grid .cal-day{height:86px;min-height:86px;justify-content:flex-start;gap:4px;}
   .cycle-grid{grid-auto-rows:86px;}
   .cycle-day-number{display:flex;align-items:center;justify-content:space-between;font-family:var(--font-mono);font-weight:600;}
   .cycle-day-number .flow-mark{width:8px;height:8px;border-radius:50%;background:var(--coral);}
+  .sex-mark{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:999px;background:rgba(84,134,166,.16);font-size:10px;line-height:1;}
+  .sex-mark.unprotected{background:rgba(189,98,72,.16);}
   .cycle-day.predicted{box-shadow:inset 0 0 0 2px var(--coral);background:#fff9f6;}
   .cycle-day.fertile{background:#eaf3f7;}
   .cycle-day.ovulation{background:#d8e9f1;box-shadow:inset 0 0 0 2px #5486a6;}
@@ -308,6 +311,10 @@
   .prediction-meta div{padding:10px;background:rgba(255,255,255,.1);border-radius:10px;}
   .prediction-meta small{display:block;color:#b7c6be;font-size:10px;text-transform:uppercase;letter-spacing:.5px;font-weight:700;}
   .prediction-meta b{display:block;margin-top:4px;font-family:var(--font-mono);font-size:12px;}
+  .pregnancy-pill{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:6px 10px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.2px;text-transform:uppercase;}
+  .pregnancy-pill.low{background:rgba(127,161,137,.2);color:#d8efe1;}
+  .pregnancy-pill.medium{background:rgba(192,146,63,.22);color:#f7e6bc;}
+  .pregnancy-pill.high{background:rgba(189,98,72,.24);color:#ffd2c5;}
   .tracking-card{margin-top:16px;}
   .tracking-card .field{margin-bottom:12px;}
   .choice-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
@@ -320,6 +327,8 @@
   .chip-grid input{position:absolute;opacity:0;pointer-events:none;}
   .chip-grid span{display:block;padding:7px 9px;border:1px solid var(--border);border-radius:99px;font-size:11px;color:var(--ink-soft);cursor:pointer;}
   .chip-grid input:checked+span{background:var(--teal-soft);border-color:var(--teal-2);color:var(--teal-2);font-weight:800;}
+  .sex-toggle{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface-alt);border-radius:10px;margin-bottom:10px;}
+  .sex-toggle label{font-size:12.5px;font-weight:700;color:var(--ink-soft);margin:0;}
   .cycle-note{font-size:12px;color:var(--ink-faint);line-height:1.45;margin:14px 0 0;}
   .activity-list{display:flex;flex-direction:column;gap:7px;margin:10px 0 18px;max-height:150px;overflow-y:auto;}
   .activity-item{display:flex;align-items:center;gap:9px;padding:9px 10px;background:var(--surface-alt);border-radius:9px;}
@@ -473,7 +482,16 @@
     })), menstrual:{
       preferences:preferences || {default_cycle_length:28,default_period_length:5},
       cycles:(cycles||[]).map(cycle=>({id:cycle.id,userId:cycle.user_id,startDate:cycle.start_date,endDate:cycle.end_date,cycleLength:cycle.cycle_length})),
-      dailyLogs:(dailyLogs||[]).map(log=>({id:log.id,userId:log.user_id,date:log.date,flowIntensity:log.flow_intensity,symptoms:log.symptoms||[],mood:log.mood||[]}))
+      dailyLogs:(dailyLogs||[]).map(log=>({
+        id:log.id,
+        userId:log.user_id,
+        date:log.date,
+        flowIntensity:log.flow_intensity,
+        symptoms:log.symptoms||[],
+        mood:log.mood||[],
+        hadSex:!!log.had_sex,
+        protectionUsed:log.protection_used===null?null:!!log.protection_used
+      }))
     }};
   }
 
@@ -582,13 +600,46 @@
       const nextPeriod=this.addDays(current.startDate,average);
       return {current,cycleDay:Math.max(1,this.daysBetween(current.startDate,today)+1),average,nextPeriod,ovulation:this.addDays(nextPeriod,-14),fertileStart:this.addDays(nextPeriod,-19),fertileEnd:this.addDays(nextPeriod,-13),periodEnd:this.addDays(nextPeriod,(preferences?.default_period_length||5)-1)};
     },
-    shouldCloseCycle(current, log){ return log.flowIntensity!=='none' && current && this.daysBetween(current.startDate,log.date)>=10; }
+    shouldCloseCycle(current, log){ return log.flowIntensity!=='none' && current && this.daysBetween(current.startDate,log.date)>=10; },
+    estimatePregnancyRisk(prediction, dailyLogs){
+      if(!prediction.ovulation) return {probability:0,level:'low',label:'Sin datos'};
+      const encounters=dailyLogs.filter(log=>log.hadSex);
+      if(!encounters.length) return {probability:0,level:'low',label:'Sin actividad registrada'};
+      let combinedNotPregnant=1;
+      encounters.forEach(log=>{
+        const diff=Math.abs(this.daysBetween(log.date,prediction.ovulation));
+        const inFertile=log.date>=prediction.fertileStart && log.date<=prediction.fertileEnd;
+        let chance=0.01;
+        if(inFertile){
+          if(diff===0) chance=0.33;
+          else if(diff===1) chance=0.30;
+          else if(diff===2) chance=0.27;
+          else if(diff===3) chance=0.20;
+          else chance=0.12;
+        } else if(diff<=7) chance=0.04;
+        if(log.protectionUsed===true) chance*=0.25;
+        if(log.protectionUsed===null) chance*=0.85;
+        combinedNotPregnant*= (1-Math.min(chance,0.95));
+      });
+      const probability=Math.round((1-combinedNotPregnant)*100);
+      const level=probability>=20?'high':probability>=8?'medium':'low';
+      const label=level==='high'?'Probabilidad alta':level==='medium'?'Probabilidad media':'Probabilidad baja';
+      return {probability,level,label};
+    }
   };
 
   async function saveDailyLog(data){
     const user=(await supabase.auth.getUser()).data.user;
     const current=MenstrualEngineService.getCurrentCycle(state.menstrual.cycles);
-    const log={user_id:user.id,date:data.date,flow_intensity:data.flowIntensity,symptoms:data.symptoms||[],mood:data.mood||[]};
+    const log={
+      user_id:user.id,
+      date:data.date,
+      flow_intensity:data.flowIntensity,
+      symptoms:data.symptoms||[],
+      mood:data.mood||[],
+      had_sex:!!data.hadSex,
+      protection_used:data.hadSex ? !!data.protectionUsed : null
+    };
     const {error:logError}=await supabase.from('daily_logs').upsert(log,{onConflict:'user_id,date'});
     if(logError) throw logError;
     if(!current && data.flowIntensity!=='none'){
@@ -940,6 +991,7 @@
   function renderMenstrualView(){
     const menstrual=state.menstrual;
     const prediction=MenstrualEngineService.getPrediction(menstrual.cycles,menstrual.preferences);
+    const pregnancyRisk=MenstrualEngineService.estimatePregnancyRisk(prediction, menstrual.dailyLogs);
     const y=calDate.getFullYear(),m=calDate.getMonth(),firstDow=new Date(y,m,1).getDay(),daysInMonth=new Date(y,m+1,0).getDate();
     const today=todayISO();
     const logsByDate=Object.fromEntries(menstrual.dailyLogs.map(log=>[log.date,log]));
@@ -951,8 +1003,9 @@
       const date=`${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`,log=logsByDate[date];
       const fertile=prediction.fertileStart&&date>=prediction.fertileStart&&date<=prediction.fertileEnd;
       const ovulation=date===prediction.ovulation, predicted=predictedDates.has(date), hasFlow=log&&log.flowIntensity!=='none';
+      const sexMark = log?.hadSex ? `<span class="sex-mark ${log.protectionUsed===false?'unprotected':''}" title="${log.protectionUsed===false?'Relación sin protección':'Relación con protección'}">${log.protectionUsed===false?'❤':'🛡'}</span>` : '';
       cells+=`<button class="cal-day cycle-day ${date===today?'today ':''}${fertile?'fertile ':''}${ovulation?'ovulation ':''}${predicted?'predicted':''}" data-action="daily-log" data-date="${date}" title="Registrar día">
-        <span class="cycle-day-number"><span>${day}</span>${hasFlow?'<span class="flow-mark"></span>':''}</span>
+        <span class="cycle-day-number"><span>${day}</span><span style="display:flex;align-items:center;gap:4px;">${hasFlow?'<span class="flow-mark"></span>':''}${sexMark}</span></span>
         ${ovulation?'<span class="cycle-day-label">Ovulación</span>':''}
         ${fertile&&!ovulation?'<span class="cycle-day-label">Fértil</span>':''}
       </button>`;
@@ -960,8 +1013,8 @@
     const periodDays=menstrual.dailyLogs.filter(log=>log.flowIntensity!=='none').length;
     return `<div class="topbar"><div><h1 class="page-title">Mi ciclo</h1><p class="page-sub">Registra cómo te sientes y conoce tus patrones con privacidad por cuenta.</p></div><button class="btn btn-primary" data-action="daily-log" data-date="${today}">${iconPlus()} Registrar hoy</button></div>
       <div class="menstrual-layout">
-        <div class="cycle-calendar"><div class="cal-head"><div class="cal-month">${MONTHS[m]} ${y}</div><div class="cal-nav"><button class="btn-icon" data-action="cycle-prev">${iconChevron('left')}</button><button class="btn-icon" data-action="cycle-today" title="Hoy">${iconDot()}</button><button class="btn-icon" data-action="cycle-next">${iconChevron('right')}</button></div></div><div class="cal-grid cycle-grid">${DOWS.map(d=>`<div class="cal-dow">${d}</div>`).join('')}${cells}</div><div class="cycle-legend"><span><i class="legend-dot"></i>Periodo registrado</span><span><i class="legend-ring"></i>Periodo estimado</span><span><i class="legend-blue"></i>Ovulación / fértil</span></div></div>
-        <div><div class="prediction-card"><h3 class="agenda-title">Tu ciclo</h3>${prediction.current?`<div class="prediction-main">Día ${prediction.cycleDay} de tu ciclo</div><div class="prediction-sub">Tu periodo llega en ${Math.max(0,MenstrualEngineService.daysBetween(today,prediction.nextPeriod))} días aproximadamente.</div><div class="prediction-meta"><div><small>Próximo periodo</small><b>${fmtDate(prediction.nextPeriod)}</b></div><div><small>Promedio</small><b>${prediction.average} días</b></div><div><small>Ovulación</small><b>${fmtDate(prediction.ovulation)}</b></div><div><small>Ventana fértil</small><b>${fmtDate(prediction.fertileStart)} - ${fmtDate(prediction.fertileEnd)}</b></div></div>`:'<div class="prediction-main">Comienza tu seguimiento</div><div class="prediction-sub">Registra tu primer día de sangrado para calcular predicciones personalizadas.</div>'}<p class="cycle-note" style="color:#c7d6cc;">Promedio basado en los últimos 6 ciclos completos. Se ignoran ciclos menores de 21 o mayores de 45 días.</p></div>
+        <div class="cycle-calendar"><div class="cal-head"><div class="cal-month">${MONTHS[m]} ${y}</div><div class="cal-nav"><button class="btn-icon" data-action="cycle-prev">${iconChevron('left')}</button><button class="btn-icon" data-action="cycle-today" title="Hoy">${iconDot()}</button><button class="btn-icon" data-action="cycle-next">${iconChevron('right')}</button></div></div><div class="cal-grid cycle-grid">${DOWS.map(d=>`<div class="cal-dow">${d}</div>`).join('')}${cells}</div><div class="cycle-legend"><span><i class="legend-dot"></i>Periodo registrado</span><span><i class="legend-ring"></i>Periodo estimado</span><span><i class="legend-blue"></i>Ovulación / fértil</span><span><i class="legend-sex">❤</i>Sin protección</span><span><i class="legend-sex">🛡</i>Con protección</span></div></div>
+        <div><div class="prediction-card"><h3 class="agenda-title">Tu ciclo</h3>${prediction.current?`<div class="prediction-main">Día ${prediction.cycleDay} de tu ciclo</div><div class="prediction-sub">Tu periodo llega en ${Math.max(0,MenstrualEngineService.daysBetween(today,prediction.nextPeriod))} días aproximadamente.</div><span class="pregnancy-pill ${pregnancyRisk.level}">${pregnancyRisk.label} · ${pregnancyRisk.probability}%</span><div class="prediction-meta"><div><small>Próximo periodo</small><b>${fmtDate(prediction.nextPeriod)}</b></div><div><small>Promedio</small><b>${prediction.average} días</b></div><div><small>Ovulación</small><b>${fmtDate(prediction.ovulation)}</b></div><div><small>Ventana fértil</small><b>${fmtDate(prediction.fertileStart)} - ${fmtDate(prediction.fertileEnd)}</b></div></div>`:'<div class="prediction-main">Comienza tu seguimiento</div><div class="prediction-sub">Registra tu primer día de sangrado para calcular predicciones personalizadas.</div>'}<p class="cycle-note" style="color:#c7d6cc;">Estimación orientativa según días fértiles, ovulación y uso de protección. No reemplaza una prueba ni asesoría médica.</p></div>
           <div class="tracking-card"><h3 class="agenda-title">Registro rápido</h3><p class="cycle-note">Selecciona una fecha del calendario o registra hoy.</p><button class="btn btn-gold" data-action="daily-log" data-date="${today}" style="margin-top:14px;width:100%;justify-content:center;">Registrar estado de hoy</button><div class="cycle-note">${periodDays?`${periodDays} día(s) con flujo registrado en tus datos.`:'Aún no hay días con flujo registrado.'}</div></div></div>
       </div>`;
   }
@@ -1200,13 +1253,23 @@
   function openDailyTracking(date){
     const existing=state.menstrual.dailyLogs.find(log=>log.date===date);
     const selectedFlow=existing?.flowIntensity||'none';
+    const hadSex=!!existing?.hadSex;
+    const protectionUsed=existing?.protectionUsed===true;
     const flow=FLOW_OPTIONS.map(([value,label])=>`<label><input type="radio" name="flowIntensity" value="${value}" ${selectedFlow===value?'checked':''}><span>${label}</span></label>`).join('');
     const choices=(items,selected,name)=>items.map(([value,label])=>`<label><input type="checkbox" name="${name}" value="${value}" ${(selected||[]).includes(value)?'checked':''}><span>${label}</span></label>`).join('');
     openModal(`<div class="modal-head"><h2 class="modal-title">Registro del ${fmtDate(date)}</h2><button class="modal-close" data-action="close-modal">✕</button></div>
-      <form id="dailyTrackingForm"><div class="field"><label>Flujo</label><div class="choice-grid">${flow}</div></div><div class="field"><label>Estado de ánimo</label><div class="chip-grid">${choices(MOOD_OPTIONS,existing?.mood,'mood')}</div></div><div class="field"><label>Síntomas</label><div class="chip-grid">${choices(SYMPTOM_OPTIONS,existing?.symptoms,'symptoms')}</div></div><div class="modal-actions">${existing?`<button type="button" class="btn btn-ghost" data-action="delete-daily-log" data-id="${existing.id}" style="color:var(--coral);margin-right:auto;">Eliminar</button>`:''}<button type="button" class="btn btn-ghost" data-action="close-modal">Cancelar</button><button type="submit" class="btn btn-primary">Guardar registro</button></div></form>`);
+      <form id="dailyTrackingForm"><div class="field"><label>Flujo</label><div class="choice-grid">${flow}</div></div><div class="field"><label>Estado de ánimo</label><div class="chip-grid">${choices(MOOD_OPTIONS,existing?.mood,'mood')}</div></div><div class="field"><label>Síntomas</label><div class="chip-grid">${choices(SYMPTOM_OPTIONS,existing?.symptoms,'symptoms')}</div></div><div class="field"><div class="sex-toggle"><label for="hadSex">¿Hubo relaciones sexuales este día?</label><input id="hadSex" type="checkbox" name="hadSex" ${hadSex?'checked':''}></div><div class="sex-toggle" id="protectionRow" style="display:${hadSex?'flex':'none'};"><label for="protectionUsed">¿Se cuidaron?</label><input id="protectionUsed" type="checkbox" name="protectionUsed" ${protectionUsed?'checked':''}></div></div><div class="modal-actions">${existing?`<button type="button" class="btn btn-ghost" data-action="delete-daily-log" data-id="${existing.id}" style="color:var(--coral);margin-right:auto;">Eliminar</button>`:''}<button type="button" class="btn btn-ghost" data-action="close-modal">Cancelar</button><button type="submit" class="btn btn-primary">Guardar registro</button></div></form>`);
+    const hadSexInput=document.getElementById('hadSex');
+    const protectionRow=document.getElementById('protectionRow');
+    hadSexInput.addEventListener('change',()=>{
+      protectionRow.style.display=hadSexInput.checked?'flex':'none';
+      if(!hadSexInput.checked) document.getElementById('protectionUsed').checked=false;
+    });
     document.getElementById('dailyTrackingForm').addEventListener('submit',async(event)=>{
       event.preventDefault();
-      const form=new FormData(event.target), data={date,flowIntensity:form.get('flowIntensity')||'none',mood:form.getAll('mood'),symptoms:form.getAll('symptoms')};
+      const form=new FormData(event.target);
+      const hadSexNow=form.get('hadSex')==='on';
+      const data={date,flowIntensity:form.get('flowIntensity')||'none',mood:form.getAll('mood'),symptoms:form.getAll('symptoms'),hadSex:hadSexNow,protectionUsed:hadSexNow ? form.get('protectionUsed')==='on' : null};
       try{ await saveDailyLog(data); showToast('Registro guardado'); closeModal(); render(); }
       catch(error){ showToast('No se pudo guardar el registro.'); }
     });
