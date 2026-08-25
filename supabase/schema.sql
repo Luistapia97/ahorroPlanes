@@ -104,20 +104,29 @@ drop policy if exists "users can update own preferences" on public.user_preferen
 create policy "users can update own preferences" on public.user_preferences for update to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
 
 drop policy if exists "users can read own cycles" on public.cycles;
-create policy "users can read own cycles" on public.cycles for select to authenticated using (user_id = auth.uid());
+drop policy if exists "users can read shared cycles" on public.cycles;
+create policy "users can read shared cycles" on public.cycles for select to authenticated using (auth.uid() in ('6388329a-d2dd-497e-b10d-37707c18463b'::uuid, '7bb8cd1b-65f1-4bed-b38e-38d3e07f4930'::uuid));
 drop policy if exists "users can create own cycles" on public.cycles;
-create policy "users can create own cycles" on public.cycles for insert to authenticated with check (user_id = auth.uid());
+drop policy if exists "users can create shared cycles" on public.cycles;
+create policy "users can create shared cycles" on public.cycles for insert to authenticated with check (auth.uid() in ('6388329a-d2dd-497e-b10d-37707c18463b'::uuid, '7bb8cd1b-65f1-4bed-b38e-38d3e07f4930'::uuid) and user_id in ('6388329a-d2dd-497e-b10d-37707c18463b'::uuid, '7bb8cd1b-65f1-4bed-b38e-38d3e07f4930'::uuid));
 drop policy if exists "users can update own cycles" on public.cycles;
-create policy "users can update own cycles" on public.cycles for update to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+drop policy if exists "users can update shared cycles" on public.cycles;
+create policy "users can update shared cycles" on public.cycles for update to authenticated using (auth.uid() in ('6388329a-d2dd-497e-b10d-37707c18463b'::uuid, '7bb8cd1b-65f1-4bed-b38e-38d3e07f4930'::uuid)) with check (user_id in ('6388329a-d2dd-497e-b10d-37707c18463b'::uuid, '7bb8cd1b-65f1-4bed-b38e-38d3e07f4930'::uuid));
+drop policy if exists "users can delete shared cycles" on public.cycles;
+create policy "users can delete shared cycles" on public.cycles for delete to authenticated using (auth.uid() in ('6388329a-d2dd-497e-b10d-37707c18463b'::uuid, '7bb8cd1b-65f1-4bed-b38e-38d3e07f4930'::uuid));
 
 drop policy if exists "users can read own daily logs" on public.daily_logs;
-create policy "users can read own daily logs" on public.daily_logs for select to authenticated using (user_id = auth.uid());
+drop policy if exists "users can read shared daily logs" on public.daily_logs;
+create policy "users can read shared daily logs" on public.daily_logs for select to authenticated using (auth.uid() in ('6388329a-d2dd-497e-b10d-37707c18463b'::uuid, '7bb8cd1b-65f1-4bed-b38e-38d3e07f4930'::uuid));
 drop policy if exists "users can create own daily logs" on public.daily_logs;
-create policy "users can create own daily logs" on public.daily_logs for insert to authenticated with check (user_id = auth.uid());
+drop policy if exists "users can create shared daily logs" on public.daily_logs;
+create policy "users can create shared daily logs" on public.daily_logs for insert to authenticated with check (auth.uid() in ('6388329a-d2dd-497e-b10d-37707c18463b'::uuid, '7bb8cd1b-65f1-4bed-b38e-38d3e07f4930'::uuid) and user_id in ('6388329a-d2dd-497e-b10d-37707c18463b'::uuid, '7bb8cd1b-65f1-4bed-b38e-38d3e07f4930'::uuid));
 drop policy if exists "users can update own daily logs" on public.daily_logs;
-create policy "users can update own daily logs" on public.daily_logs for update to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+drop policy if exists "users can update shared daily logs" on public.daily_logs;
+create policy "users can update shared daily logs" on public.daily_logs for update to authenticated using (auth.uid() in ('6388329a-d2dd-497e-b10d-37707c18463b'::uuid, '7bb8cd1b-65f1-4bed-b38e-38d3e07f4930'::uuid)) with check (user_id in ('6388329a-d2dd-497e-b10d-37707c18463b'::uuid, '7bb8cd1b-65f1-4bed-b38e-38d3e07f4930'::uuid));
 drop policy if exists "users can delete own daily logs" on public.daily_logs;
-create policy "users can delete own daily logs" on public.daily_logs for delete to authenticated using (user_id = auth.uid());
+drop policy if exists "users can delete shared daily logs" on public.daily_logs;
+create policy "users can delete shared daily logs" on public.daily_logs for delete to authenticated using (auth.uid() in ('6388329a-d2dd-497e-b10d-37707c18463b'::uuid, '7bb8cd1b-65f1-4bed-b38e-38d3e07f4930'::uuid));
 
 alter table public.plans replica identity full;
 alter table public.contributions replica identity full;

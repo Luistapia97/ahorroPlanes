@@ -2,9 +2,9 @@
 
 ## Objetivo
 
-**Mi ciclo** es un módulo privado de seguimiento menstrual integrado en Rumbo. Permite registrar el flujo, el estado de ánimo y los síntomas de cada día, además de mostrar predicciones orientativas del siguiente periodo, la ovulación y la ventana fértil.
+**Mi ciclo** es un módulo compartido de seguimiento menstrual integrado en Rumbo. Las dos cuentas autorizadas pueden registrar el flujo, el estado de ánimo y los síntomas de cada día, además de ver las predicciones orientativas del siguiente periodo, la ovulación y la ventana fértil.
 
-Los datos menstruales están separados de los planes y actividades compartidos. Cada usuario solo puede consultar y modificar sus propios registros mediante las políticas RLS de Supabase.
+Los datos menstruales están separados de los planes y actividades compartidos. Las políticas RLS de Supabase permiten consultar y modificar estos datos únicamente a las dos cuentas de Rumbo configuradas en el esquema.
 
 ## Modelos de datos
 
@@ -120,7 +120,7 @@ Cuando todavía no existe un ciclo actual, muestra una invitación para registra
 
 ## Privacidad y sincronización
 
-Las tablas menstruales tienen RLS con la condición `user_id = auth.uid()`. Los cambios se publican en Realtime para mantener abierta la sesión actualizada, pero las políticas impiden que otra cuenta lea esos datos.
+Las tablas menstruales tienen RLS limitado a los dos UUID autorizados de Rumbo. Los cambios se publican en Realtime, por lo que ambas sesiones ven los nuevos registros y correcciones sin recargar. Ninguna otra cuenta autenticada puede consultar estos datos.
 
 Para activar el módulo en Supabase, ejecuta [`supabase/schema.sql`](supabase/schema.sql). El script es idempotente y añade las tablas, políticas y publicaciones Realtime necesarias.
 

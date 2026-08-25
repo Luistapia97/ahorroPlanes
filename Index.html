@@ -482,7 +482,7 @@
       supabase.from('plans').select('*').order('target_date'),
       supabase.from('contributions').select('*').order('date',{ascending:false}),
       supabase.from('activities').select('*').order('date').order('time'),
-      supabase.from('user_preferences').select('*').maybeSingle(),
+      supabase.from('user_preferences').select('*').eq('user_id',(await supabase.auth.getUser()).data.user.id).maybeSingle(),
       supabase.from('cycles').select('*').order('start_date',{ascending:false}),
       supabase.from('daily_logs').select('*').order('date',{ascending:false})
     ]);
@@ -591,11 +591,27 @@
     const log={user_id:user.id,date:data.date,flow_intensity:data.flowIntensity,symptoms:data.symptoms||[],mood:data.mood||[]};
     const {error:logError}=await supabase.from('daily_logs').upsert(log,{onConflict:'user_id,date'});
     if(logError) throw logError;
+    if(!current && data.flowIntensity!=='none'){
+      const {error:firstCycleError}=await supabase.from('cycles').insert({user_id:user.id,start_date:data.date});
+      if(firstCycleError) throw firstCycleError;
+    }
     if(MenstrualEngineService.shouldCloseCycle(current,data)){
       const {error:closeError}=await supabase.from('cycles').update({end_date:data.date,cycle_length:MenstrualEngineService.daysBetween(current.startDate,data.date)}).eq('id',current.id);
       if(closeError) throw closeError;
       const {error:newCycleError}=await supabase.from('cycles').insert({user_id:user.id,start_date:data.date});
       if(newCycleError) throw newCycleError;
+    }
+    await loadData();
+  }
+
+  async function removeDailyLog(id){
+    const log=state.menstrual.dailyLogs.find(item=>item.id===id);
+    const current=MenstrualEngineService.getCurrentCycle(state.menstrual.cycles);
+    const {error}=await supabase.from('daily_logs').delete().eq('id',id);
+    if(error) throw error;
+    if(log && current && current.startDate===log.date){
+      const {error:cycleError}=await supabase.from('cycles').delete().eq('id',current.id);
+      if(cycleError) throw cycleError;
     }
     await loadData();
   }
@@ -1187,7 +1203,7 @@
     const flow=FLOW_OPTIONS.map(([value,label])=>`<label><input type="radio" name="flowIntensity" value="${value}" ${selectedFlow===value?'checked':''}><span>${label}</span></label>`).join('');
     const choices=(items,selected,name)=>items.map(([value,label])=>`<label><input type="checkbox" name="${name}" value="${value}" ${(selected||[]).includes(value)?'checked':''}><span>${label}</span></label>`).join('');
     openModal(`<div class="modal-head"><h2 class="modal-title">Registro del ${fmtDate(date)}</h2><button class="modal-close" data-action="close-modal">✕</button></div>
-      <form id="dailyTrackingForm"><div class="field"><label>Flujo</label><div class="choice-grid">${flow}</div></div><div class="field"><label>Estado de ánimo</label><div class="chip-grid">${choices(MOOD_OPTIONS,existing?.mood,'mood')}</div></div><div class="field"><label>Síntomas</label><div class="chip-grid">${choices(SYMPTOM_OPTIONS,existing?.symptoms,'symptoms')}</div></div><div class="modal-actions"><button type="button" class="btn btn-ghost" data-action="close-modal">Cancelar</button><button type="submit" class="btn btn-primary">Guardar registro</button></div></form>`);
+      <form id="dailyTrackingForm"><div class="field"><label>Flujo</label><div class="choice-grid">${flow}</div></div><div class="field"><label>Estado de ánimo</label><div class="chip-grid">${choices(MOOD_OPTIONS,existing?.mood,'mood')}</div></div><div class="field"><label>Síntomas</label><div class="chip-grid">${choices(SYMPTOM_OPTIONS,existing?.symptoms,'symptoms')}</div></div><div class="modal-actions">${existing?`<button type="button" class="btn btn-ghost" data-action="delete-daily-log" data-id="${existing.id}" style="color:var(--coral);margin-right:auto;">Eliminar</button>`:''}<button type="button" class="btn btn-ghost" data-action="close-modal">Cancelar</button><button type="submit" class="btn btn-primary">Guardar registro</button></div></form>`);
     document.getElementById('dailyTrackingForm').addEventListener('submit',async(event)=>{
       event.preventDefault();
       const form=new FormData(event.target), data={date,flowIntensity:form.get('flowIntensity')||'none',mood:form.getAll('mood'),symptoms:form.getAll('symptoms')};
@@ -1233,6 +1249,9 @@
     else if(action==='delete-plan') deletePlan(id);
     else if(action==='add-activity') openActivityForm(btn.dataset.date);
     else if(action==='daily-log') openDailyTracking(btn.dataset.date);
+    else if(action==='delete-daily-log'){
+      if(confirm('¿Eliminar este registro diario?')) removeDailyLog(id).then(()=>{ showToast('Registro eliminado'); closeModal(); render(); }).catch(()=>showToast('No se pudo eliminar el registro.'));
+    }
     else if(action==='delete-activity') removeActivity(id).then(async()=>{ await loadData(); openActivityForm(activeActivityDate); }).catch(()=>showToast('No se pudo eliminar la actividad.'));
     else if(action==='edit-contribution'){
       const plan = state.plans.find(item=>item.contributions.some(contribution=>contribution.id===id));
