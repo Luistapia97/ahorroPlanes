@@ -336,6 +336,7 @@
   .activity-item-body{min-width:0;flex:1;}
   .activity-item-title{font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .activity-item-meta{font-size:11px;color:var(--ink-faint);font-family:var(--font-mono);}
+  .activity-reminder{display:inline-flex;align-items:center;gap:4px;margin-top:4px;padding:4px 7px;border-radius:999px;background:rgba(84,134,166,.12);color:var(--teal-2);font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;}
   .activity-delete{border:0;background:transparent;color:var(--ink-faint);font-size:16px;padding:3px 6px;border-radius:6px;}
   .activity-delete:hover{background:var(--coral-soft);color:var(--coral);}
 
@@ -478,7 +479,7 @@
       createdAt:plan.created_at.slice(0,10), contributions:grouped[plan.id]||[]
     })), activities:(activities||[]).map(activity=>({
       id:activity.id, title:activity.title, date:activity.date, time:activity.time||'',
-      note:activity.note||'', color:activity.color||'gold'
+      note:activity.note||'', color:activity.color||'gold', reminderAt:activity.reminder_at || null, reminderSent:!!activity.reminder_sent
     })), menstrual:{
       preferences:preferences || {default_cycle_length:28,default_period_length:5},
       cycles:(cycles||[]).map(cycle=>({id:cycle.id,userId:cycle.user_id,startDate:cycle.start_date,endDate:cycle.end_date,cycleLength:cycle.cycle_length})),
@@ -511,6 +512,7 @@
     if(cyclesError) throw cyclesError;
     if(logsError) throw logsError;
     state = fromRows(plans||[], contributions||[], activities||[], preferences, cycles, dailyLogs);
+    scheduleActivityNotifications();
   }
 
   function subscribeToChanges(){
@@ -571,9 +573,85 @@
     if(error) throw error;
   }
 
+  const activityReminderTimers = new Map();
+
+  function formatDateTimeLocal(value){
+    if(!value) return '';
+    const date = new Date(value);
+    if(Number.isNaN(date.getTime())) return '';
+    const offset = date.getTimezoneOffset();
+    const local = new Date(date.getTime() - offset * 60000);
+    return local.toISOString().slice(0,16);
+  }
+
+  function formatReminderText(value){
+    if(!value) return '';
+    const date = new Date(value);
+    if(Number.isNaN(date.getTime())) return '';
+    return date.toLocaleString('es-MX', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
+  }
+
+  async function ensureNotificationPermission(){
+    if(!('Notification' in window)){
+      showToast('Este navegador no soporta notificaciones web.');
+      return false;
+    }
+    if(Notification.permission === 'granted') return true;
+    if(Notification.permission === 'denied'){
+      showToast('Las notificaciones están bloqueadas para este navegador.');
+      return false;
+    }
+    const result = await Notification.requestPermission();
+    if(result === 'granted') return true;
+    showToast('Debes permitir notificaciones para recibir recordatorios.');
+    return false;
+  }
+
+  function scheduleActivityNotifications(){
+    activityReminderTimers.forEach((timer)=>clearTimeout(timer));
+    activityReminderTimers.clear();
+    const now = Date.now();
+    state.activities.forEach((activity)=>{
+      if(!activity.reminderAt || activity.reminderSent) return;
+      const reminderTime = new Date(activity.reminderAt).getTime();
+      if(Number.isNaN(reminderTime) || reminderTime <= now) return;
+      const delay = reminderTime - now;
+      const timer = setTimeout(async()=>{
+        const hasPermission = 'Notification' in window && Notification.permission === 'granted';
+        if(hasPermission){
+          new Notification('Recordatorio de actividad', {
+            body: `${activity.title}${activity.note ? ' · ' + activity.note : ''}`,
+            tag: `activity-${activity.id}`
+          });
+        }
+        const {error} = await supabase.from('activities').update({reminder_sent: true}).eq('id', activity.id);
+        if(!error){
+          const match = state.activities.find(item=>item.id===activity.id);
+          if(match) match.reminderSent = true;
+        }
+      }, delay);
+      activityReminderTimers.set(activity.id, timer);
+    });
+  }
+
   async function createActivity(data){
-    const {error} = await supabase.from('activities').insert({title:data.title,date:data.date,time:data.time||null,note:data.note||'',color:data.color||'gold'});
+    const reminderEnabled = !!(data.reminderEnabled && data.reminderAt);
+    const reminderAt = reminderEnabled ? new Date(data.reminderAt).toISOString() : null;
+    if(reminderEnabled){
+      await ensureNotificationPermission();
+    }
+    const {error} = await supabase.from('activities').insert({
+      title:data.title,
+      date:data.date,
+      time:data.time||null,
+      note:data.note||'',
+      color:data.color||'gold',
+      reminder_at: reminderAt,
+      reminder_sent: false
+    });
     if(error) throw error;
+    await loadData();
+    scheduleActivityNotifications();
   }
 
   async function removeActivity(id){
@@ -1229,7 +1307,7 @@
       <div class="activity-list">
         ${activities.length ? activities.map(activity=>`<div class="activity-item">
           <span class="activity-item-dot" style="--activity-color:${activityColor(activity.color)}"></span>
-          <div class="activity-item-body"><div class="activity-item-title">${escapeHtml(activity.title)}</div><div class="activity-item-meta">${activity.time||'Sin hora'}${activity.note?' · '+escapeHtml(activity.note):''}</div></div>
+          <div class="activity-item-body"><div class="activity-item-title">${escapeHtml(activity.title)}</div><div class="activity-item-meta">${activity.time||'Sin hora'}${activity.note?' · '+escapeHtml(activity.note):''}</div>${activity.reminderAt?`<div class="activity-reminder">⏰ ${escapeHtml(formatReminderText(activity.reminderAt))}</div>`:''}</div>
           <button class="activity-delete" data-action="delete-activity" data-id="${activity.id}" title="Eliminar">✕</button>
         </div>`).join('') : '<div class="muted-empty">Todavía no hay actividades este día.</div>'}
       </div>
@@ -1238,6 +1316,7 @@
         <div class="field"><label>Actividad</label><input type="text" name="title" required maxlength="80" placeholder="Ej. Comprar boletos"></div>
         <div class="field-row"><div class="field"><label>Hora (opcional)</label><input type="time" name="time"></div><div class="field"><label>Color</label><select name="color"><option value="gold">Dorado</option><option value="teal">Verde</option><option value="coral">Coral</option><option value="sage">Salvia</option></select></div></div>
         <div class="field"><label>Nota (opcional)</label><input type="text" name="note" maxlength="120" placeholder="Un detalle breve"></div>
+        <div class="field"><div class="sex-toggle"><label for="reminderEnabled">Activar recordatorio</label><input id="reminderEnabled" type="checkbox" name="reminderEnabled"></div><input type="datetime-local" name="reminderAt" step="60" min="${new Date().toISOString().slice(0,16)}"></div>
         <div class="modal-actions"><button type="button" class="btn btn-ghost" data-action="close-modal">Cerrar</button><button type="submit" class="btn btn-primary">Agregar actividad</button></div>
       </form>
     `);
@@ -1245,7 +1324,7 @@
       e.preventDefault();
       const data = Object.fromEntries(new FormData(e.target).entries());
       data.date = date;
-      try{ await createActivity(data); await loadData(); showToast('Actividad agregada'); closeModal(); render(); }
+      try{ await createActivity(data); showToast('Actividad agregada'); closeModal(); render(); }
       catch(error){ showToast('No se pudo guardar la actividad.'); }
     });
   }

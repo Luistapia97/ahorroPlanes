@@ -70,6 +70,20 @@ Puedes seleccionar uno o varios síntomas, por ejemplo:
 
 No es obligatorio seleccionar síntomas o estados de ánimo. Lo importante para detectar el inicio de un ciclo es indicar correctamente el flujo.
 
+### Relaciones sexuales y protección
+
+También puedes registrar si hubo relaciones sexuales ese día:
+
+1. Activa **¿Hubo relaciones sexuales este día?**.
+2. Si se muestra la segunda opción, indica **¿Se cuidaron?**.
+3. Guarda el registro.
+
+Reglas del formulario:
+
+- Si no marcas relaciones, el dato de protección se limpia automáticamente.
+- Si marcas relaciones y no marcas protección, se guarda como relación sin protección.
+- Puedes corregir esta información después abriendo de nuevo la misma fecha.
+
 ## Corregir un registro
 
 Si registraste un día incorrectamente, vuelve a pulsar la misma fecha y guarda las opciones correctas. El sistema actualiza el registro existente de ese día; no crea una copia adicional.
@@ -79,6 +93,8 @@ Esto permite corregir:
 - La intensidad del flujo.
 - Los síntomas.
 - El estado de ánimo.
+- Si hubo relaciones sexuales.
+- Si hubo protección.
 
 ## Cómo leer el calendario
 
@@ -89,6 +105,8 @@ Cada día aparece como una celda del calendario mensual.
 - **Fondo azul claro:** ventana fértil estimada.
 - **Fondo azul más marcado:** día de ovulación estimado.
 - **Resaltado verde:** día actual.
+- **Escudo 🛡:** se registró relación con protección.
+- **Corazón ❤:** se registró relación sin protección.
 
 En teléfonos, el calendario muestra una versión compacta para que las celdas mantengan un tamaño cómodo y no se deformen.
 
@@ -146,6 +164,22 @@ La ovulación se estima 14 días antes del próximo periodo previsto.
 Se estima desde 5 días antes de la ovulación hasta 1 día después.
 
 Estas fechas son cálculos aproximados basados en ciclos anteriores y no representan una certeza biológica.
+
+### Probabilidad de embarazo (orientativa)
+
+La tarjeta también muestra una etiqueta con:
+
+- **Probabilidad baja**
+- **Probabilidad media**
+- **Probabilidad alta**
+
+y un porcentaje estimado.
+
+Cómo interpretarlo:
+
+- Es un cálculo orientativo basado en cercanía a ovulación, ventana fértil y si se registró protección.
+- No es un diagnóstico ni una confirmación de embarazo.
+- No reemplaza una prueba de embarazo ni la asesoría médica.
 
 ## Qué ocurre al comenzar un nuevo periodo
 
@@ -210,9 +244,16 @@ Comprueba que:
 3. Las tablas `user_preferences`, `cycles` y `daily_logs` fueron creadas en Supabase.
 4. Las políticas RLS del archivo [`supabase/schema.sql`](supabase/schema.sql) fueron ejecutadas.
 
-### Mis datos no aparecen en otro usuario
+### Mis datos no aparecen en la otra cuenta autorizada
 
-Es el comportamiento esperado. Los datos de **Mi ciclo** son privados por usuario. Los planes y actividades compartidos funcionan de manera independiente.
+No es el comportamiento esperado. Si usas una de las dos cuentas autorizadas de Rumbo, ambas deben ver y actualizar los datos de **Mi ciclo**.
+
+Si no se refleja:
+
+1. Verifica que ambas cuentas iniciaron sesión correctamente.
+2. Confirma que se ejecutó la versión más reciente de [`supabase/schema.sql`](supabase/schema.sql).
+3. Revisa que las políticas RLS de `cycles` y `daily_logs` incluyan los dos UUID autorizados.
+4. Espera unos segundos para la sincronización Realtime o vuelve a abrir la vista.
 
 ### Las fechas parecen incorrectas
 

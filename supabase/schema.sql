@@ -29,9 +29,14 @@ create table if not exists public.activities (
   time time,
   note text not null default '',
   color text not null default 'gold' check (color in ('gold', 'teal', 'coral', 'sage')),
+  reminder_at timestamptz,
+  reminder_sent boolean not null default false,
   created_by uuid not null references auth.users(id) default auth.uid(),
   created_at timestamptz not null default now()
 );
+
+alter table public.activities add column if not exists reminder_at timestamptz;
+alter table public.activities add column if not exists reminder_sent boolean not null default false;
 
 create table if not exists public.user_preferences (
   user_id uuid primary key references auth.users(id) on delete cascade,
