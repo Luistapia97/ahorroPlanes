@@ -575,13 +575,13 @@
 
   const activityReminderTimers = new Map();
 
+  function localDateTimeForInput(date = new Date()){
+    const pad = (value) => String(value).padStart(2,'0');
+    return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  }
+
   function formatDateTimeLocal(value){
-    if(!value) return '';
-    const date = new Date(value);
-    if(Number.isNaN(date.getTime())) return '';
-    const offset = date.getTimezoneOffset();
-    const local = new Date(date.getTime() - offset * 60000);
-    return local.toISOString().slice(0,16);
+    return value ? localDateTimeForInput(new Date(value)) : '';
   }
 
   function formatReminderText(value){
@@ -636,7 +636,7 @@
 
   async function createActivity(data){
     const reminderEnabled = !!(data.reminderEnabled && data.reminderAt);
-    const reminderAt = reminderEnabled ? new Date(data.reminderAt).toISOString() : null;
+    const reminderAt = reminderEnabled ? new Date(data.reminderAt + ':00').toISOString() : null;
     if(reminderEnabled){
       await ensureNotificationPermission();
     }
@@ -1316,10 +1316,19 @@
         <div class="field"><label>Actividad</label><input type="text" name="title" required maxlength="80" placeholder="Ej. Comprar boletos"></div>
         <div class="field-row"><div class="field"><label>Hora (opcional)</label><input type="time" name="time"></div><div class="field"><label>Color</label><select name="color"><option value="gold">Dorado</option><option value="teal">Verde</option><option value="coral">Coral</option><option value="sage">Salvia</option></select></div></div>
         <div class="field"><label>Nota (opcional)</label><input type="text" name="note" maxlength="120" placeholder="Un detalle breve"></div>
-        <div class="field"><div class="sex-toggle"><label for="reminderEnabled">Activar recordatorio</label><input id="reminderEnabled" type="checkbox" name="reminderEnabled"></div><input type="datetime-local" name="reminderAt" step="60" min="${new Date().toISOString().slice(0,16)}"></div>
+        <div class="field"><div class="sex-toggle"><label for="reminderEnabled">Activar recordatorio</label><input id="reminderEnabled" type="checkbox" name="reminderEnabled"></div><input id="reminderAtInput" type="datetime-local" name="reminderAt" step="60" min="${localDateTimeForInput(new Date())}" disabled></div>
         <div class="modal-actions"><button type="button" class="btn btn-ghost" data-action="close-modal">Cerrar</button><button type="submit" class="btn btn-primary">Agregar actividad</button></div>
       </form>
     `);
+    const reminderToggle = document.getElementById('reminderEnabled');
+    const reminderInput = document.getElementById('reminderAtInput');
+    reminderToggle.addEventListener('change', ()=>{
+      const enabled = reminderToggle.checked;
+      reminderInput.disabled = !enabled;
+      if(enabled && !reminderInput.value) {
+        reminderInput.value = localDateTimeForInput(new Date());
+      }
+    });
     document.getElementById('activityForm').addEventListener('submit', async(e)=>{
       e.preventDefault();
       const data = Object.fromEntries(new FormData(e.target).entries());
