@@ -108,7 +108,7 @@ GOOGLE_CLIENT_ID=tu_client_id_aqui
 
 ---
 
-## Paso 5: Configurar el Dominio de Vercel en Google Cloud
+## Paso 5: Configurar el Dominio de Vercel en Google Cloud - me quede aqui
 
 Una vez que deployaste en Vercel, obtendrás una URL como:
 

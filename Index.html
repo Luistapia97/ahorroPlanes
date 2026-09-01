@@ -440,6 +440,7 @@
 
 <div class="toast" id="toast"></div>
 
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (function(){
@@ -634,13 +635,83 @@
     });
   }
 
+  function googleCalendarConnected(){
+    return !!localStorage.getItem('googleCalendarAccessToken');
+  }
+
+  async function connectGoogleCalendar(){
+    try{
+      const configResponse = await fetch('/api/config');
+      const config = await configResponse.json();
+      const clientId = config.googleClientId;
+      if(!clientId){
+        showToast('Falta GOOGLE_CLIENT_ID en Vercel para Google Calendar.');
+        return;
+      }
+      if(!window.google || !window.google.accounts || !window.google.accounts.oauth2){
+        showToast('Google OAuth no está disponible en esta página.');
+        return;
+      }
+      const tokenClient = window.google.accounts.oauth2.initTokenClient({
+        client_id: clientId,
+        scope: 'https://www.googleapis.com/auth/calendar.events',
+        callback: (tokenResponse) => {
+          if(tokenResponse.error){
+            showToast('No se pudo autorizar Google Calendar.');
+            return;
+          }
+          localStorage.setItem('googleCalendarAccessToken', tokenResponse.access_token);
+          localStorage.setItem('googleCalendarTokenExpiry', String(Date.now() + (tokenResponse.expires_in || 3600) * 1000));
+          showToast('Google Calendar conectado');
+          render();
+        }
+      });
+      tokenClient.requestAccessToken();
+    }catch(error){
+      showToast('No se pudo conectar con Google Calendar.');
+    }
+  }
+
+  async function createGoogleCalendarEvent(activity){
+    const accessToken = localStorage.getItem('googleCalendarAccessToken');
+    if(!accessToken || !activity || !activity.date || !activity.title) return null;
+    const startDateTime = activity.reminderAt ? new Date(activity.reminderAt) : activity.time ? new Date(`${activity.date}T${activity.time}:00`) : new Date(`${activity.date}T09:00:00`);
+    const endDateTime = new Date(startDateTime.getTime() + 30 * 60000);
+    const eventBody = {
+      summary: activity.title,
+      description: activity.note || '',
+      start: { dateTime: startDateTime.toISOString() },
+      end: { dateTime: endDateTime.toISOString() },
+      reminders: {
+        useDefault: false,
+        overrides: [{ method: 'popup', minutes: 15 }]
+      }
+    };
+
+    const response = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(eventBody)
+    });
+
+    if(!response.ok){
+      const errorText = await response.text();
+      throw new Error(errorText || 'Google Calendar error');
+    }
+
+    return await response.json();
+  }
+
   async function createActivity(data){
     const reminderEnabled = !!(data.reminderEnabled && data.reminderAt);
     const reminderAt = reminderEnabled ? new Date(data.reminderAt + ':00').toISOString() : null;
     if(reminderEnabled){
       await ensureNotificationPermission();
     }
-    const {error} = await supabase.from('activities').insert({
+    const {data:activityRow, error} = await supabase.from('activities').insert({
       title:data.title,
       date:data.date,
       time:data.time||null,
@@ -648,8 +719,25 @@
       color:data.color||'gold',
       reminder_at: reminderAt,
       reminder_sent: false
-    });
+    }).select().single();
     if(error) throw error;
+
+    const shouldSyncGoogle = reminderEnabled && data.syncToGoogle === 'on' && googleCalendarConnected();
+    if(shouldSyncGoogle && activityRow){
+      try{
+        await createGoogleCalendarEvent({
+          title: activityRow.title,
+          note: activityRow.note,
+          date: activityRow.date,
+          time: activityRow.time,
+          reminderAt: activityRow.reminder_at
+        });
+      }catch(syncError){
+        console.warn('Google Calendar sync failed', syncError);
+        showToast('Actividad guardada en la app. No se pudo sincronizar con Google Calendar.');
+      }
+    }
+
     await loadData();
     scheduleActivityNotifications();
   }
@@ -827,7 +915,8 @@
   }
 
   function renderSessionBar(){
-    return `<div class="session-bar"><span class="user-email" id="userEmail">${escapeHtml(currentUserEmail)}</span><button class="btn btn-ghost btn-sm" data-action="sign-out">Salir</button></div>`;
+    const googleStatus = googleCalendarConnected() ? '<button class="btn btn-ghost btn-sm" data-action="google-calendar-sync">Google OK</button>' : '<button class="btn btn-ghost btn-sm" data-action="google-calendar-sync">Sincronizar con Google Calendar</button>';
+    return `<div class="session-bar"><span class="user-email" id="userEmail">${escapeHtml(currentUserEmail)}</span>${googleStatus}<button class="btn btn-ghost btn-sm" data-action="sign-out">Salir</button></div>`;
   }
 
   function updateSidebarStat(){
@@ -1317,6 +1406,7 @@
         <div class="field-row"><div class="field"><label>Hora (opcional)</label><input type="time" name="time"></div><div class="field"><label>Color</label><select name="color"><option value="gold">Dorado</option><option value="teal">Verde</option><option value="coral">Coral</option><option value="sage">Salvia</option></select></div></div>
         <div class="field"><label>Nota (opcional)</label><input type="text" name="note" maxlength="120" placeholder="Un detalle breve"></div>
         <div class="field"><div class="sex-toggle"><label for="reminderEnabled">Activar recordatorio</label><input id="reminderEnabled" type="checkbox" name="reminderEnabled"></div><input id="reminderAtInput" type="datetime-local" name="reminderAt" step="60" min="${localDateTimeForInput(new Date())}" disabled></div>
+        <div class="field"><div class="sex-toggle"><label for="syncToGoogle">Sincronizar con Google Calendar</label><input id="syncToGoogle" type="checkbox" name="syncToGoogle" ${googleCalendarConnected() ? 'checked' : ''} ${googleCalendarConnected() ? '' : 'disabled'}></div></div>
         <div class="modal-actions"><button type="button" class="btn btn-ghost" data-action="close-modal">Cerrar</button><button type="submit" class="btn btn-primary">Agregar actividad</button></div>
       </form>
     `);
@@ -1398,6 +1488,7 @@
     else if(action==='view-plan') openDetail(id);
     else if(action==='contribute') openContribute(id);
     else if(action==='delete-plan') deletePlan(id);
+    else if(action==='google-calendar-sync') connectGoogleCalendar();
     else if(action==='add-activity') openActivityForm(btn.dataset.date);
     else if(action==='daily-log') openDailyTracking(btn.dataset.date);
     else if(action==='delete-daily-log'){
