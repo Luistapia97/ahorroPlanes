@@ -637,7 +637,14 @@
   }
 
   function googleCalendarConnected(){
-    return !!localStorage.getItem('googleCalendarAccessToken');
+    const accessToken = localStorage.getItem('googleCalendarAccessToken');
+    const tokenExpiry = Number(localStorage.getItem('googleCalendarTokenExpiry') || 0);
+    return !!accessToken && (!tokenExpiry || tokenExpiry > Date.now());
+  }
+
+  function clearGoogleCalendarAuth(){
+    localStorage.removeItem('googleCalendarAccessToken');
+    localStorage.removeItem('googleCalendarTokenExpiry');
   }
 
   async function preloadGoogleClientId(){
@@ -751,6 +758,10 @@
 
     if(!response.ok){
       const errorText = await response.text();
+      if(response.status === 401){
+        clearGoogleCalendarAuth();
+        render();
+      }
       throw new Error(errorText || 'Google Calendar error');
     }
 
@@ -786,7 +797,9 @@
         });
       }catch(syncError){
         console.warn('Google Calendar sync failed', syncError);
-        showToast('Actividad guardada en la app. No se pudo sincronizar con Google Calendar.');
+        showToast(syncError.message.includes('Invalid Credentials') || syncError.message.includes('authentication credentials')
+          ? 'Actividad guardada. Vuelve a conectar Google Calendar.'
+          : 'Actividad guardada en la app. No se pudo sincronizar con Google Calendar.');
       }
     }
 
