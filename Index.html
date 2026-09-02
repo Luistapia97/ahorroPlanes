@@ -455,6 +455,7 @@
   let activeDetailId = null;
   let activeActivityDate = null;
   let currentUserEmail = '';
+  let googleClientId = '';
 
   const CATEGORIES = {
     viaje:     {label:'Viaje',       emoji:'✈️'},
@@ -639,44 +640,91 @@
     return !!localStorage.getItem('googleCalendarAccessToken');
   }
 
-  async function connectGoogleCalendar(){
+  async function preloadGoogleClientId(){
     try{
       const configResponse = await fetch('/api/config');
       const config = await configResponse.json();
-      const clientId = config.googleClientId;
-      if(!clientId){
-        showToast('Falta GOOGLE_CLIENT_ID en Vercel para Google Calendar.');
-        return;
-      }
-      if(!window.google || !window.google.accounts || !window.google.accounts.oauth2){
-        showToast('Google OAuth no está disponible en esta página.');
-        return;
-      }
-      const tokenClient = window.google.accounts.oauth2.initTokenClient({
-        client_id: clientId,
-        scope: 'https://www.googleapis.com/auth/calendar.events',
-        callback: (tokenResponse) => {
-          if(tokenResponse.error){
-            showToast('No se pudo autorizar Google Calendar.');
-            return;
-          }
-          localStorage.setItem('googleCalendarAccessToken', tokenResponse.access_token);
-          localStorage.setItem('googleCalendarTokenExpiry', String(Date.now() + (tokenResponse.expires_in || 3600) * 1000));
-          showToast('Google Calendar conectado');
-          render();
-        }
-      });
-      tokenClient.requestAccessToken();
+      googleClientId = config.googleClientId || '';
+      return googleClientId;
     }catch(error){
-      showToast('No se pudo conectar con Google Calendar.');
+      googleClientId = '';
+      console.warn('No se pudo cargar GOOGLE_CLIENT_ID', error);
+      return '';
     }
+  }
+
+  function connectGoogleCalendar(){
+    const clientId = googleClientId;
+    if(!clientId){
+      showToast('Falta GOOGLE_CLIENT_ID en Vercel para Google Calendar.');
+      return;
+    }
+    if(!window.google || !window.google.accounts || !window.google.accounts.oauth2){
+      showToast('Google OAuth no está disponible en esta página.');
+      return;
+    }
+    const tokenClient = window.google.accounts.oauth2.initTokenClient({
+      client_id: clientId,
+      scope: 'https://www.googleapis.com/auth/calendar.events',
+      callback: (tokenResponse) => {
+        if(tokenResponse.error){
+          showToast('No se pudo autorizar Google Calendar.');
+          return;
+        }
+        localStorage.setItem('googleCalendarAccessToken', tokenResponse.access_token);
+        localStorage.setItem('googleCalendarTokenExpiry', String(Date.now() + (tokenResponse.expires_in || 3600) * 1000));
+        showToast('Google Calendar conectado');
+        render();
+      }
+    });
+    tokenClient.requestAccessToken({ prompt: 'consent' });
+  }
+
+  function normalizeGoogleTime(value){
+    if(!value) return '09:00';
+    const cleaned = String(value).trim();
+
+    const simpleMatch = /^\s*(\d{1,2}):(\d{2})(?::\d{2})?\s*$/.exec(cleaned);
+    if(simpleMatch){
+      const hours = Number(simpleMatch[1]);
+      const minutes = Number(simpleMatch[2]);
+      if(hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59){
+        return `${String(hours).padStart(2,'0')}:${String(minutes).padStart(2,'0')}`;
+      }
+    }
+
+    const isoMatch = /^\s*(\d{4})-(\d{2})-(\d{2})[T\s](\d{1,2}):(\d{2})/.exec(cleaned);
+    if(isoMatch){
+      const hours = Number(isoMatch[4]);
+      const minutes = Number(isoMatch[5]);
+      if(hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59){
+        return `${String(hours).padStart(2,'0')}:${String(minutes).padStart(2,'0')}`;
+      }
+    }
+
+    return '09:00';
+  }
+
+  function buildGoogleDateTime(dateValue, timeValue){
+    const dateText = String(dateValue || '').slice(0,10);
+    let baseDate = new Date();
+    if(/^\d{4}-\d{2}-\d{2}$/.test(dateText)){
+      const [year, month, day] = dateText.split('-').map(Number);
+      baseDate = new Date(year, month - 1, day, 0, 0, 0, 0);
+    }
+
+    const [hours, minutes] = normalizeGoogleTime(timeValue).split(':').map(Number);
+    const parsed = new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), hours, minutes, 0, 0);
+    return Number.isNaN(parsed.getTime()) ? new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), 9, 0, 0, 0) : parsed;
   }
 
   async function createGoogleCalendarEvent(activity){
     const accessToken = localStorage.getItem('googleCalendarAccessToken');
     if(!accessToken || !activity || !activity.date || !activity.title) return null;
-    const startDateTime = activity.reminderAt ? new Date(activity.reminderAt) : activity.time ? new Date(`${activity.date}T${activity.time}:00`) : new Date(`${activity.date}T09:00:00`);
+
+    const startDateTime = buildGoogleDateTime(activity.date, activity.time);
     const endDateTime = new Date(startDateTime.getTime() + 30 * 60000);
+
     const eventBody = {
       summary: activity.title,
       description: activity.note || '',
@@ -684,7 +732,11 @@
       end: { dateTime: endDateTime.toISOString() },
       reminders: {
         useDefault: false,
-        overrides: [{ method: 'popup', minutes: 15 }]
+        overrides: [
+          { method: 'popup', minutes: 60 },
+          { method: 'popup', minutes: 30 },
+          { method: 'popup', minutes: 15 }
+        ]
       }
     };
 
@@ -722,14 +774,14 @@
     }).select().single();
     if(error) throw error;
 
-    const shouldSyncGoogle = reminderEnabled && data.syncToGoogle === 'on' && googleCalendarConnected();
+    const shouldSyncGoogle = data.syncToGoogle === 'on' && googleCalendarConnected();
     if(shouldSyncGoogle && activityRow){
       try{
         await createGoogleCalendarEvent({
           title: activityRow.title,
           note: activityRow.note,
           date: activityRow.date,
-          time: activityRow.time,
+          time: activityRow.time || '09:00',
           reminderAt: activityRow.reminder_at
         });
       }catch(syncError){
@@ -1519,6 +1571,7 @@
     try{
       const configResponse = await fetch('/api/config');
       const config = await configResponse.json();
+      googleClientId = config.googleClientId || '';
       if(!config.url || !config.anonKey) throw new Error('Configuración ausente');
       supabase = window.supabase.createClient(config.url, config.anonKey);
       supabase.auth.onAuthStateChange(async(_event, session)=>{
