@@ -455,6 +455,7 @@
   let activeDetailId = null;
   let activeActivityDate = null;
   let currentUserEmail = '';
+  let currentUserId = null;
   let googleClientId = '';
 
   const CATEGORIES = {
@@ -503,7 +504,7 @@
       supabase.from('plans').select('*').order('target_date'),
       supabase.from('contributions').select('*').order('date',{ascending:false}),
       supabase.from('activities').select('*').order('date').order('time'),
-      supabase.from('user_preferences').select('*').eq('user_id',(await supabase.auth.getUser()).data.user.id).maybeSingle(),
+      supabase.from('user_preferences').select('*').eq('user_id',currentUserId).maybeSingle(),
       supabase.from('cycles').select('*').order('start_date',{ascending:false}),
       supabase.from('daily_logs').select('*').order('date',{ascending:false})
     ]);
@@ -533,6 +534,7 @@
     const message = String(error?.message || '').toLowerCase();
     if(message.includes('email not confirmed')) return 'Confirma el correo del usuario en Supabase Auth antes de iniciar sesión.';
     if(message.includes('invalid login credentials')) return 'El correo o la contraseña no coinciden. El UID no se usa para iniciar sesión.';
+    if(message.includes('failed to fetch') || message.includes('network')) return 'No se pudo conectar con Supabase. Revisa que el proyecto esté activo (no pausado).';
     if(message.includes('email rate limit')) return 'Supabase bloqueó temporalmente los intentos. Espera unos minutos y vuelve a probar.';
     return error?.message || 'No se pudo iniciar sesión.';
   }
@@ -1584,30 +1586,40 @@
     try{
       const configResponse = await fetch('/api/config');
       const config = await configResponse.json();
+      if(!configResponse.ok) throw new Error(config.error || 'Configuración ausente');
       googleClientId = config.googleClientId || '';
       if(!config.url || !config.anonKey) throw new Error('Configuración ausente');
       supabase = window.supabase.createClient(config.url, config.anonKey);
-      supabase.auth.onAuthStateChange(async(_event, session)=>{
+      // Supabase recomienda no esperar otras llamadas de supabase dentro de este callback (puede bloquear la sesión),
+      // por eso la carga se difiere con setTimeout.
+      supabase.auth.onAuthStateChange((_event, session)=>{
+        setTimeout(()=>handleSession(session), 0);
+      });
+      async function handleSession(session){
         const authenticated = !!session;
         if(!authenticated){
+          currentUserId = null;
           document.querySelector('.app').style.display = 'none';
           document.getElementById('authScreen').style.display = 'flex';
           return;
         }
         currentUserEmail = session.user.email;
+        currentUserId = session.user.id;
         try{
           await loadData();
           document.querySelector('.app').style.display = 'flex';
           document.getElementById('authScreen').style.display = 'none';
-          currentUserEmail = session.user.email;
           subscribeToChanges();
           render();
         }catch(error){
           document.querySelector('.app').style.display = 'none';
           document.getElementById('authScreen').style.display = 'flex';
-          document.getElementById('authError').textContent = 'La sesión es válida, pero no se pudieron cargar los planes. Ejecuta el esquema SQL y revisa las políticas RLS.';
+          console.error('Error al cargar datos de Supabase', error);
+          document.getElementById('authError').textContent = /failed to fetch|network/i.test(String(error?.message || ''))
+            ? 'No se pudo conectar con Supabase. Revisa que el proyecto esté activo (no pausado) y que SUPABASE_URL sea correcta.'
+            : 'La sesión es válida, pero no se pudieron cargar los planes. Ejecuta el esquema SQL y revisa las políticas RLS.';
         }
-      });
+      }
       const {data:{session}} = await supabase.auth.getSession();
       if(!session){
         document.querySelector('.app').style.display = 'none';
@@ -1631,8 +1643,11 @@
         }
       });
     }catch(error){
+      console.error('Error al cargar la configuración', error);
       document.getElementById('authScreen').style.display = 'flex';
-      document.getElementById('authError').textContent = 'No se pudo cargar la configuración de Supabase. Revisa que Vercel Dev esté ejecutándose en http://localhost:3000.';
+      document.getElementById('authError').textContent = location.hostname === 'localhost'
+        ? 'No se pudo cargar la configuración de Supabase. Revisa que Vercel Dev esté ejecutándose en http://localhost:3000.'
+        : 'No se pudo cargar la configuración de Supabase. Revisa SUPABASE_URL y SUPABASE_ANON_KEY en las variables de entorno de Vercel.';
     }
   }
   init();
