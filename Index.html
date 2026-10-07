@@ -184,7 +184,7 @@
   .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
   .cal-month{font-family:var(--font-display);font-size:20px;font-weight:600;text-transform:capitalize;}
   .cal-nav{display:flex;gap:6px;}
-  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:78px;gap:6px;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));grid-auto-rows:78px;gap:6px;}
   .cal-dow{text-align:center;font-size:11px;font-weight:700;color:var(--ink-faint);padding-bottom:6px;text-transform:uppercase;}
   .cal-day{
     height:78px;min-height:78px;border-radius:11px;padding:7px 8px;background:var(--surface-alt);
@@ -390,6 +390,27 @@
   .budget-item-amount{font-family:var(--font-mono);font-weight:600;font-size:13.5px;white-space:nowrap;}
   .paid-toggle{border:1px solid var(--border);background:var(--surface);border-radius:99px;font-size:11px;font-weight:700;padding:4px 10px;color:var(--coral);white-space:nowrap;}
   .paid-toggle.done{background:var(--teal-soft);border-color:transparent;color:var(--teal-2);}
+  .task-board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:start;}
+  .task-column{background:var(--surface-alt);border-radius:var(--radius-md);padding:12px;display:flex;flex-direction:column;gap:8px;min-height:120px;}
+  .task-column-head{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--ink-soft);padding:2px 4px 4px;}
+  .task-count{font-family:var(--font-mono);background:var(--surface);border-radius:99px;padding:2px 8px;font-size:11px;}
+  .task-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:11px 12px;display:flex;flex-direction:column;gap:8px;box-shadow:var(--shadow-sm);}
+  .task-title{background:none;border:none;padding:0;text-align:left;font-size:13.5px;font-weight:700;color:var(--ink);line-height:1.35;overflow-wrap:anywhere;}
+  .task-title:hover{color:var(--teal-2);}
+  .task-card.hecha .task-title{text-decoration:line-through;color:var(--ink-faint);}
+  .task-meta{display:flex;flex-wrap:wrap;gap:6px;}
+  .task-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:99px;background:var(--surface-alt);color:var(--ink-soft);font-size:11px;font-weight:700;white-space:nowrap;}
+  .task-card .task-tag{background:var(--bg);}
+  .task-tag.overdue{background:var(--coral-soft);color:var(--coral);}
+  .task-tag.today{background:var(--gold-soft);color:#8A6B27;}
+  .task-moves{display:flex;gap:6px;justify-content:flex-end;}
+  .task-move{border:1px solid var(--border);background:var(--surface);border-radius:8px;font-size:11.5px;font-weight:700;padding:5px 9px;color:var(--ink-soft);}
+  .task-move:hover{background:var(--surface-alt);color:var(--ink);}
+  .task-move.primary{background:var(--teal);border-color:var(--teal);color:#fff;}
+  .task-move.primary:hover{background:var(--teal-2);}
+  .cal-activity.task .cal-activity-label{color:var(--teal-2);}
+  .cal-activity.task.done .cal-activity-label{text-decoration:line-through;color:var(--ink-faint);}
+  .modal-subtitle{font-family:var(--font-display);font-size:16px;font-weight:600;margin:0 0 8px;}
 
   @media (max-width:980px){
     .stat-grid{grid-template-columns:repeat(2,1fr);}
@@ -436,7 +457,9 @@
     .stage-label{font-size:9.5px;}
     .budget-item{flex-wrap:wrap;row-gap:6px;}
     .budget-item-body{flex:1 1 calc(100% - 50px);}
-    .budget-item-amount{margin-left:45px;margin-right:auto;}
+    .budget-item-amount,.budget-item .task-tag{margin-left:45px;margin-right:auto;}
+    .task-board{grid-template-columns:1fr;}
+    .task-column{min-height:0;}
   }
 </style>
 </head>
@@ -510,7 +533,7 @@
   /* ---------------- DATA LAYER ---------------- */
   let supabase = null;
   let realtimeChannel = null;
-  let state = { plans: [], activities: [], menstrual: { preferences: null, cycles: [], dailyLogs: [] }, ideas: [], ideaVotes: [], ventures: [], budgetItems: [] };
+  let state = { plans: [], activities: [], menstrual: { preferences: null, cycles: [], dailyLogs: [] }, ideas: [], ideaVotes: [], ventures: [], budgetItems: [], tasks: [] };
   let currentView = 'dashboard';
   let calDate = new Date();
   let activeDetailId = null;
@@ -573,16 +596,17 @@
       supabase.from('ideas').select('*').order('created_at',{ascending:false}),
       supabase.from('idea_votes').select('*'),
       supabase.from('ventures').select('*').order('created_at',{ascending:false}),
-      supabase.from('venture_budget_items').select('*').order('created_at')
+      supabase.from('venture_budget_items').select('*').order('created_at'),
+      supabase.from('venture_tasks').select('*').order('created_at')
     ]);
     const failed = results.find(result=>result.error);
     if(failed) throw failed.error;
-    const [plans,contributions,activities,preferences,cycles,dailyLogs,ideas,ideaVotes,ventures,budgetItems] = results.map(result=>result.data);
-    state = {...fromRows(plans||[], contributions||[], activities||[], preferences, cycles, dailyLogs), ...ventureStateFromRows(ideas||[], ideaVotes||[], ventures||[], budgetItems||[])};
+    const [plans,contributions,activities,preferences,cycles,dailyLogs,ideas,ideaVotes,ventures,budgetItems,tasks] = results.map(result=>result.data);
+    state = {...fromRows(plans||[], contributions||[], activities||[], preferences, cycles, dailyLogs), ...ventureStateFromRows(ideas||[], ideaVotes||[], ventures||[], budgetItems||[], tasks||[])};
     scheduleActivityNotifications();
   }
 
-  function ventureStateFromRows(ideas, ideaVotes, ventures, budgetItems){
+  function ventureStateFromRows(ideas, ideaVotes, ventures, budgetItems, tasks){
     return {
       ideas:ideas.map(idea=>({id:idea.id, title:idea.title, description:idea.description||'', status:idea.status, createdBy:idea.created_by})),
       ideaVotes:ideaVotes.map(vote=>({id:vote.id, ideaId:vote.idea_id, userId:vote.user_id, interest:vote.interest, investment:vote.investment, timeNeeded:vote.time_needed, risk:vote.risk})),
@@ -590,7 +614,8 @@
         id:venture.id, ideaId:venture.idea_id, planId:venture.plan_id, name:venture.name, pitch:venture.pitch||'',
         audience:venture.audience||'', valueProp:venture.value_prop||'', roles:venture.roles||'', stage:venture.stage
       })),
-      budgetItems:budgetItems.map(item=>({id:item.id, ventureId:item.venture_id, name:item.name, category:item.category, amount:Number(item.amount), fundedBy:item.funded_by, paid:!!item.paid}))
+      budgetItems:budgetItems.map(item=>({id:item.id, ventureId:item.venture_id, name:item.name, category:item.category, amount:Number(item.amount), fundedBy:item.funded_by, paid:!!item.paid})),
+      tasks:tasks.map(task=>({id:task.id, ventureId:task.venture_id, title:task.title, notes:task.notes||'', status:task.status, assignee:task.assignee, dueDate:task.due_date, createdAt:task.created_at}))
     };
   }
 
@@ -607,6 +632,7 @@
       .on('postgres_changes',{event:'*',schema:'public',table:'idea_votes'},refreshFromRealtime)
       .on('postgres_changes',{event:'*',schema:'public',table:'ventures'},refreshFromRealtime)
       .on('postgres_changes',{event:'*',schema:'public',table:'venture_budget_items'},refreshFromRealtime)
+      .on('postgres_changes',{event:'*',schema:'public',table:'venture_tasks'},refreshFromRealtime)
       .subscribe();
   }
 
@@ -726,6 +752,23 @@
     }).select('id').single();
     if(error) throw error;
     await updateVenture(venture.id,{plan_id:plan.id});
+  }
+
+  async function saveTask(ventureId,id,data){
+    const row = {title:data.title.trim(), notes:(data.notes||'').trim(), assignee:data.assignee, due_date:data.dueDate||null};
+    if(data.status){ row.status = data.status; row.completed_at = data.status==='hecha' ? new Date().toISOString() : null; }
+    const {error} = id ? await supabase.from('venture_tasks').update(row).eq('id',id) : await supabase.from('venture_tasks').insert({...row, venture_id:ventureId});
+    if(error) throw error;
+  }
+
+  async function moveTask(id,status){
+    const {error} = await supabase.from('venture_tasks').update({status, completed_at: status==='hecha' ? new Date().toISOString() : null}).eq('id',id);
+    if(error) throw error;
+  }
+
+  async function removeTask(id){
+    const {error} = await supabase.from('venture_tasks').delete().eq('id',id);
+    if(error) throw error;
   }
 
   async function updatePlanTarget(planId,targetCost){
@@ -1195,11 +1238,40 @@
         </div>
       </div>
 
+      ${todayTasksCard()}
+
       <div class="section-head">
         <h2 class="section-title">Tus planes</h2>
         ${plans.length ? `<button class="section-link" data-action="goto-plans">Ver todos →</button>` : ''}
       </div>
       ${plans.length ? `<div class="plan-grid">${sortedPlans.slice(0,6).map(planCard).join('')}</div>` : emptyState()}
+    `;
+  }
+
+  function todayTasksCard(){
+    const tasks = dueTodayTasks();
+    if(!tasks.length) return '';
+    return `
+      <div class="section-head">
+        <h2 class="section-title">Hoy les toca</h2>
+        <span class="section-hint">Tareas de Emprende</span>
+      </div>
+      <div class="agenda-card">
+        ${tasks.map(task=>{
+          const venture = state.ventures.find(item=>item.id===task.ventureId);
+          const due = taskDue(task);
+          return `<div class="budget-item">
+            <div class="agenda-emoji">${due.cls==='overdue' ? '⏰' : '📌'}</div>
+            <div class="budget-item-body">
+              <div class="agenda-name">${escapeHtml(task.title)}</div>
+              <div class="agenda-sub">${escapeHtml(venture.name)} · ${PARTNERS[task.assignee] || 'Ambos'}</div>
+            </div>
+            <span class="task-tag ${due.cls}">${due.label}</span>
+            <button class="btn btn-ghost btn-sm" data-action="open-task-venture" data-id="${task.ventureId}">Abrir</button>
+            <button class="btn btn-primary btn-sm" data-action="move-task" data-id="${task.id}" data-status="hecha" title="Marcar como hecha">✓</button>
+          </div>`;
+        }).join('')}
+      </div>
     `;
   }
 
@@ -1274,6 +1346,10 @@
     state.activities.filter(activity=>activity.date.slice(0,7)===`${y}-${String(m+1).padStart(2,'0')}`).forEach(activity=>{
       (activitiesByDay[Number(activity.date.slice(8,10))] ||= []).push(activity);
     });
+    const monthKey = `${y}-${String(m+1).padStart(2,'0')}`;
+    const monthTasks = sortTasks(state.tasks.filter(task=>task.dueDate && task.dueDate.slice(0,7)===monthKey));
+    const tasksByDay = {};
+    monthTasks.forEach(task=>{ (tasksByDay[Number(task.dueDate.slice(8,10))] ||= []).push(task); });
 
     // map day -> plans due that day
     const dayMap = {};
@@ -1291,13 +1367,16 @@
       const dateStr = y+'-'+String(m+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
       const isToday = dateStr===todayStr;
       const items = dayMap[day]||[];
-      const activities = activitiesByDay[day]||[];
+      const entries = [
+        ...(activitiesByDay[day]||[]).map(activity=>({label:escapeHtml(activity.title), color:activityColor(activity.color), cls:''})),
+        ...(tasksByDay[day]||[]).map(task=>({label:(task.status==='hecha'?'✓ ':'◻ ')+escapeHtml(task.title), color:'var(--teal-2)', cls:'task'+(task.status==='hecha'?' done':'')}))
+      ];
       cells += `
         <div class="cal-day ${isToday?'today':''}" data-action="add-activity" data-date="${dateStr}" title="Agregar actividad">
           <span class="cal-day-num">${day}</span>
           <div class="cal-activities">
-            ${activities.slice(0,2).map(activity=>`<div class="cal-activity" style="--activity-color:${activityColor(activity.color)}"><span class="cal-activity-dot"></span><span class="cal-activity-label">${escapeHtml(activity.title)}</span></div>`).join('')}
-            ${activities.length>2?`<span class="cal-activity-more">+${activities.length-2} más</span>`:''}
+            ${entries.slice(0,2).map(entry=>`<div class="cal-activity ${entry.cls}" style="--activity-color:${entry.color}"><span class="cal-activity-dot"></span><span class="cal-activity-label">${entry.label}</span></div>`).join('')}
+            ${entries.length>2?`<span class="cal-activity-more">+${entries.length-2} más</span>`:''}
             ${items.length?`<span class="cal-emojis">${items.map(p=>(CATEGORIES[p.category]||CATEGORIES.otro).emoji).join(' ')}</span>`:''}
           </div>
         </div>`;
@@ -1321,7 +1400,7 @@
       <div class="topbar">
         <div>
           <h1 class="page-title">Calendario</h1>
-          <p class="page-sub">Visualiza cuándo vencen tus planes y qué aportes te tocan este mes.</p>
+          <p class="page-sub">Visualiza cuándo vencen tus planes, las tareas de tus proyectos y qué aportes te tocan este mes.</p>
         </div>
         <button class="btn btn-primary" data-action="new-plan">${iconPlus()} Nuevo plan</button>
       </div>
@@ -1356,6 +1435,22 @@
               </div>`;
             }).join('') : `<div class="muted-empty">Ningún plan vence este mes.</div>`}
           </div>
+
+          ${monthTasks.length ? `<div class="agenda-card">
+            <h3 class="agenda-title">Tareas de Emprende en ${MONTHS[m]}</h3>
+            ${monthTasks.map(task=>{
+              const venture = state.ventures.find(item=>item.id===task.ventureId);
+              const done = task.status==='hecha';
+              return `<div class="agenda-item">
+                <div class="agenda-emoji">${done ? '✅' : '📌'}</div>
+                <div style="min-width:0;flex:1;">
+                  <div class="agenda-name">${escapeHtml(task.title)}</div>
+                  <div class="agenda-sub">${fmtDate(task.dueDate)} · ${escapeHtml(venture?.name || '')} · ${PARTNERS[task.assignee] || 'Ambos'}</div>
+                </div>
+                <button class="btn btn-ghost btn-sm" data-action="open-task-venture" data-id="${task.ventureId}">Abrir</button>
+              </div>`;
+            }).join('')}
+          </div>` : ''}
 
           <div class="agenda-card">
             <h3 class="agenda-title">Aportes sugeridos de ${MONTHS[m]}</h3>
@@ -1613,11 +1708,23 @@
   function openActivityForm(date){
     activeActivityDate = date;
     const activities = state.activities.filter(activity=>activity.date===date).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+    const dayTasks = state.tasks.filter(task=>task.dueDate===date);
     openModal(`
       <div class="modal-head">
         <h2 class="modal-title">Actividades del ${fmtDate(date)}</h2>
         <button class="modal-close" data-action="close-modal">✕</button>
       </div>
+      ${dayTasks.length ? `<h3 class="modal-subtitle">Tareas de Emprende</h3>
+      <div class="activity-list">
+        ${dayTasks.map(task=>{
+          const venture = state.ventures.find(item=>item.id===task.ventureId);
+          return `<div class="activity-item">
+            <span class="activity-item-dot" style="--activity-color:var(--teal-2)"></span>
+            <div class="activity-item-body"><div class="activity-item-title">${task.status==='hecha'?'✓ ':''}${escapeHtml(task.title)}</div><div class="activity-item-meta">${escapeHtml(venture?.name || '')} · ${PARTNERS[task.assignee] || 'Ambos'} · ${TASK_STATUSES.find(status=>status.key===task.status).label}</div></div>
+            <button class="btn btn-ghost btn-sm" data-action="open-task-venture" data-id="${task.ventureId}">Abrir</button>
+          </div>`;
+        }).join('')}
+      </div>` : ''}
       <div class="activity-list">
         ${activities.length ? activities.map(activity=>`<div class="activity-item">
           <span class="activity-item-dot" style="--activity-color:${activityColor(activity.color)}"></span>
@@ -1702,6 +1809,11 @@
     {key:'primer_cliente', label:'Primer cliente',     emoji:'🤝'},
     {key:'ganancias',      label:'Primeras ganancias', emoji:'💸'}
   ];
+  const TASK_STATUSES = [
+    {key:'pendiente',  label:'Por hacer'},
+    {key:'en_proceso', label:'En proceso'},
+    {key:'hecha',      label:'Hecho'}
+  ];
   // Cada criterio se califica de 1 a 5, donde 5 siempre es lo más favorable para la idea.
   const IDEA_CRITERIA = [
     {key:'interest',   label:'Interés',   hint:'5 = nos emociona mucho'},
@@ -1730,6 +1842,32 @@
       else perPartner[item.fundedBy] += item.amount;
     });
     return {items, total, paid, pending:total-paid, perPartner, pct: total>0 ? Math.round((paid/total)*100) : 0};
+  }
+
+  function sortTasks(tasks){
+    return [...tasks].sort((a,b)=>(a.dueDate||'9999-12-31').localeCompare(b.dueDate||'9999-12-31') || (a.createdAt||'').localeCompare(b.createdAt||''));
+  }
+
+  function taskDue(task){
+    if(!task.dueDate) return null;
+    const today = todayISO();
+    if(task.status!=='hecha' && task.dueDate<today) return {label:'Vencida · '+fmtDate(task.dueDate), cls:'overdue'};
+    if(task.dueDate===today) return {label:'Hoy', cls:task.status==='hecha' ? '' : 'today'};
+    return {label:fmtDate(task.dueDate), cls:''};
+  }
+
+  // Tareas sin terminar que vencen hoy o ya vencieron, para la tarjeta "Hoy les toca".
+  function dueTodayTasks(){
+    const today = todayISO();
+    return sortTasks(state.tasks.filter(task=>task.status!=='hecha' && task.dueDate && task.dueDate<=today && state.ventures.some(v=>v.id===task.ventureId)));
+  }
+
+  function goToVenture(id){
+    closeModal();
+    setView('ventures');
+    activeVentureId = id;
+    render();
+    window.scrollTo(0,0);
   }
 
   async function runAction(task, successMsg, errorMsg){
@@ -1847,8 +1985,38 @@
           <div class="progress-track" style="margin-top:8px;"><i style="width:${budget.pct}%"></i></div>
         </div>
         <div class="plan-foot">
-          <div class="plan-foot-date">${budget.items.length} partida${budget.items.length===1?'':'s'}</div>
+          <div class="plan-foot-date">${(()=>{ const tasks = state.tasks.filter(task=>task.ventureId===venture.id); return `<b>${tasks.filter(task=>task.status==='hecha').length}/${tasks.length}</b> tareas`; })()}</div>
           <button class="btn btn-primary btn-sm" data-action="open-venture" data-id="${venture.id}">Abrir proyecto</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function taskBoard(venture){
+    const tasks = sortTasks(state.tasks.filter(task=>task.ventureId===venture.id));
+    return `<div class="task-board">${TASK_STATUSES.map(status=>{
+      const column = tasks.filter(task=>task.status===status.key);
+      return `<div class="task-column">
+        <div class="task-column-head"><span>${status.label}</span><span class="task-count">${column.length}</span></div>
+        ${column.length ? column.map(taskCard).join('') : `<div class="muted-empty">${status.key==='pendiente' ? 'Agreguen el siguiente paso, por pequeño que sea.' : 'Nada por aquí.'}</div>`}
+      </div>`;
+    }).join('')}</div>`;
+  }
+
+  function taskCard(task){
+    const index = TASK_STATUSES.findIndex(status=>status.key===task.status);
+    const prev = TASK_STATUSES[index-1], next = TASK_STATUSES[index+1];
+    const due = taskDue(task);
+    return `
+      <div class="task-card ${task.status}">
+        <button class="task-title" data-action="edit-task" data-id="${task.id}" title="Editar tarea">${escapeHtml(task.title)}</button>
+        <div class="task-meta">
+          <span class="task-tag">👤 ${PARTNERS[task.assignee] || 'Ambos'}</span>
+          ${due ? `<span class="task-tag ${due.cls}">📅 ${due.label}</span>` : ''}
+        </div>
+        <div class="task-moves">
+          ${prev ? `<button class="task-move" data-action="move-task" data-id="${task.id}" data-status="${prev.key}" title="Mover a ${prev.label}">←</button>` : ''}
+          ${next ? `<button class="task-move primary" data-action="move-task" data-id="${task.id}" data-status="${next.key}">${next.key==='hecha' ? '✓ Terminar' : 'Empezar →'}</button>` : ''}
         </div>
       </div>
     `;
@@ -1871,6 +2039,12 @@
         <button class="btn btn-ghost" data-action="edit-venture" data-id="${venture.id}">${iconEdit()} Editar ficha</button>
       </div>
       ${stageStepper(venture,true)}
+
+      <div class="section-head">
+        <h2 class="section-title">Tareas</h2>
+        <button class="btn btn-gold btn-sm" data-action="new-task" data-id="${venture.id}">${iconPlus()} Tarea</button>
+      </div>
+      ${taskBoard(venture)}
 
       <div class="venture-layout">
         <div class="venture-col">
@@ -2121,10 +2295,59 @@
     });
   }
 
+  function openTaskForm(ventureId, existing){
+    const isEdit = !!existing;
+    const task = existing || {id:null, title:'', notes:'', assignee:'ambos', dueDate:'', status:'pendiente'};
+    const venture = state.ventures.find(item=>item.id===ventureId);
+    const partnerOptions = Object.entries(PARTNERS).map(([key,label])=>`<option value="${key}" ${task.assignee===key?'selected':''}>${label}</option>`).join('');
+    const statusOptions = TASK_STATUSES.map(status=>`<option value="${status.key}" ${task.status===status.key?'selected':''}>${status.label}</option>`).join('');
+    openModal(`
+      <div class="modal-head">
+        <h2 class="modal-title">${isEdit?'Editar tarea':'Nueva tarea'}</h2>
+        <button class="modal-close" data-action="close-modal">✕</button>
+      </div>
+      <p class="modal-note">Proyecto: <b>${escapeHtml(venture?.name || '')}</b>. Si le ponen fecha, aparecerá en el calendario compartido.</p>
+      <form id="taskForm">
+        <div class="field">
+          <label>Tarea</label>
+          <input type="text" name="title" required maxlength="120" placeholder="Ej. Cotizar 3 proveedores de harina" value="${escapeHtml(task.title)}">
+        </div>
+        <div class="field-row">
+          <div class="field"><label>¿A quién le toca?</label><select name="assignee">${partnerOptions}</select></div>
+          <div class="field"><label>Fecha límite (opcional)</label><input type="date" name="dueDate" value="${task.dueDate||''}"></div>
+        </div>
+        ${isEdit ? `<div class="field"><label>Estado</label><select name="status">${statusOptions}</select></div>` : ''}
+        <div class="field">
+          <label>Notas (opcional)</label>
+          <textarea name="notes" rows="2" placeholder="Detalles, enlaces, teléfonos...">${escapeHtml(task.notes)}</textarea>
+        </div>
+        <div class="modal-actions">
+          ${isEdit ? `<button type="button" class="btn btn-ghost" data-action="delete-task" data-id="${task.id}" style="color:var(--coral);margin-right:auto;">Eliminar</button>` : ''}
+          <button type="button" class="btn btn-ghost" data-action="close-modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">${isEdit?'Guardar cambios':'Agregar tarea'}</button>
+        </div>
+      </form>
+    `);
+    document.getElementById('taskForm').addEventListener('submit', async(e)=>{
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.target).entries());
+      if(isEdit && data.status===task.status) delete data.status;
+      if(await runAction(()=>saveTask(ventureId,task.id,data), isEdit?'Tarea actualizada':'Tarea agregada', 'No se pudo guardar la tarea.')) closeModal();
+    });
+  }
+
+  function moveTaskMessage(task, status){
+    if(status!=='hecha') return `Tarea movida a ${TASK_STATUSES.find(item=>item.key===status).label}`;
+    const remaining = state.tasks.filter(item=>item.ventureId===task.ventureId && item.id!==task.id && item.status!=='hecha').length;
+    const venture = state.ventures.find(item=>item.id===task.ventureId);
+    return remaining ? '✅ Tarea terminada' : `🎉 ¡Terminaron todas las tareas de ${venture?.name || 'este proyecto'}!`;
+  }
+
   function handleVentureAction(action, id, btn){
     const idea = state.ideas.find(item=>item.id===id);
     const venture = state.ventures.find(item=>item.id===id);
     const budgetItem = state.budgetItems.find(item=>item.id===id);
+    const task = state.tasks.find(item=>item.id===id);
     if(action==='new-idea') openIdeaForm(null);
     else if(action==='edit-idea' && idea) openIdeaForm(idea);
     else if(action==='vote-idea' && idea) openIdeaVote(idea);
@@ -2136,7 +2359,7 @@
     else if(action==='delete-idea'){
       if(confirm('¿Eliminar esta idea y sus votos?')) runAction(()=>removeIdea(id), 'Idea eliminada', 'No se pudo eliminar la idea.');
     }
-    else if(action==='open-venture'){ activeVentureId = id; render(); window.scrollTo(0,0); }
+    else if(action==='open-venture' || action==='open-task-venture') goToVenture(id);
     else if(action==='close-venture'){ activeVentureId = null; render(); }
     else if(action==='edit-venture' && venture) openVentureForm(venture, null);
     else if(action==='delete-venture' && venture){
@@ -2153,6 +2376,12 @@
     else if(action==='toggle-paid' && budgetItem) runAction(()=>setBudgetItemPaid(id,!budgetItem.paid), null, 'No se pudo actualizar la partida.');
     else if(action==='delete-budget-item'){
       if(confirm('¿Eliminar esta partida?')) runAction(()=>removeBudgetItem(id), 'Partida eliminada', 'No se pudo eliminar la partida.').then(ok=>ok && closeModal());
+    }
+    else if(action==='new-task') openTaskForm(id, null);
+    else if(action==='edit-task' && task) openTaskForm(task.ventureId, task);
+    else if(action==='move-task' && task) runAction(()=>moveTask(id,btn.dataset.status), moveTaskMessage(task,btn.dataset.status), 'No se pudo mover la tarea.');
+    else if(action==='delete-task'){
+      if(confirm('¿Eliminar esta tarea?')) runAction(()=>removeTask(id), 'Tarea eliminada', 'No se pudo eliminar la tarea.').then(ok=>ok && closeModal());
     }
     else if(action==='new-capital-plan' && venture) openCapitalPlanForm(venture);
     else if(action==='sync-capital-plan' && venture && venture.planId){

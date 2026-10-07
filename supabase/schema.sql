@@ -122,6 +122,20 @@ create table if not exists public.venture_budget_items (
   created_at timestamptz not null default now()
 );
 
+-- Módulo Emprende (fase 2): tablero de tareas por proyecto
+create table if not exists public.venture_tasks (
+  id uuid primary key default gen_random_uuid(),
+  venture_id uuid not null references public.ventures(id) on delete cascade,
+  title text not null check (char_length(title) between 1 and 120),
+  notes text not null default '',
+  status text not null default 'pendiente' check (status in ('pendiente', 'en_proceso', 'hecha')),
+  assignee text not null default 'ambos' check (assignee in ('ambos', 'luis', 'isabel')),
+  due_date date,
+  completed_at timestamptz,
+  created_by uuid not null references auth.users(id) default auth.uid(),
+  created_at timestamptz not null default now()
+);
+
 alter table public.plans enable row level security;
 alter table public.contributions enable row level security;
 alter table public.activities enable row level security;
@@ -132,6 +146,7 @@ alter table public.ideas enable row level security;
 alter table public.idea_votes enable row level security;
 alter table public.ventures enable row level security;
 alter table public.venture_budget_items enable row level security;
+alter table public.venture_tasks enable row level security;
 
 drop policy if exists "authenticated users can read plans" on public.plans;
 create policy "authenticated users can read plans" on public.plans for select to authenticated using (true);
@@ -228,6 +243,15 @@ create policy "authenticated users can update venture budget items" on public.ve
 drop policy if exists "authenticated users can delete venture budget items" on public.venture_budget_items;
 create policy "authenticated users can delete venture budget items" on public.venture_budget_items for delete to authenticated using (true);
 
+drop policy if exists "authenticated users can read venture tasks" on public.venture_tasks;
+create policy "authenticated users can read venture tasks" on public.venture_tasks for select to authenticated using (true);
+drop policy if exists "authenticated users can create venture tasks" on public.venture_tasks;
+create policy "authenticated users can create venture tasks" on public.venture_tasks for insert to authenticated with check (created_by = auth.uid() and exists (select 1 from public.ventures where id = venture_id));
+drop policy if exists "authenticated users can update venture tasks" on public.venture_tasks;
+create policy "authenticated users can update venture tasks" on public.venture_tasks for update to authenticated using (true) with check (true);
+drop policy if exists "authenticated users can delete venture tasks" on public.venture_tasks;
+create policy "authenticated users can delete venture tasks" on public.venture_tasks for delete to authenticated using (true);
+
 alter table public.plans replica identity full;
 alter table public.contributions replica identity full;
 alter table public.activities replica identity full;
@@ -238,6 +262,7 @@ alter table public.ideas replica identity full;
 alter table public.idea_votes replica identity full;
 alter table public.ventures replica identity full;
 alter table public.venture_budget_items replica identity full;
+alter table public.venture_tasks replica identity full;
 
 do $$
 begin
@@ -314,5 +339,10 @@ begin
     select 1 from pg_publication_rel pr join pg_class c on c.oid = pr.prrelid join pg_namespace n on n.oid = c.relnamespace join pg_publication p on p.oid = pr.prpubid
     where p.pubname = 'supabase_realtime' and n.nspname = 'public' and c.relname = 'venture_budget_items'
   ) then alter publication supabase_realtime add table public.venture_budget_items; end if;
+
+  if not exists (
+    select 1 from pg_publication_rel pr join pg_class c on c.oid = pr.prrelid join pg_namespace n on n.oid = c.relnamespace join pg_publication p on p.oid = pr.prpubid
+    where p.pubname = 'supabase_realtime' and n.nspname = 'public' and c.relname = 'venture_tasks'
+  ) then alter publication supabase_realtime add table public.venture_tasks; end if;
 end
 $$;
