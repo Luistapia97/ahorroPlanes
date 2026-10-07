@@ -74,12 +74,64 @@ alter table public.daily_logs add column if not exists protection_used boolean;
 alter table public.daily_logs drop constraint if exists daily_logs_sex_protection_check;
 alter table public.daily_logs add constraint daily_logs_sex_protection_check check ((had_sex = false and protection_used is null) or had_sex = true);
 
+-- Módulo Emprende (fase 1): banco de ideas, votos, proyectos y presupuesto de arranque
+create table if not exists public.ideas (
+  id uuid primary key default gen_random_uuid(),
+  title text not null check (char_length(title) between 1 and 120),
+  description text not null default '',
+  status text not null default 'activa' check (status in ('activa', 'descartada', 'proyecto')),
+  created_by uuid not null references auth.users(id) default auth.uid(),
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.idea_votes (
+  id uuid primary key default gen_random_uuid(),
+  idea_id uuid not null references public.ideas(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade default auth.uid(),
+  interest smallint not null check (interest between 1 and 5),
+  investment smallint not null check (investment between 1 and 5),
+  time_needed smallint not null check (time_needed between 1 and 5),
+  risk smallint not null check (risk between 1 and 5),
+  updated_at timestamptz not null default now(),
+  unique (idea_id, user_id)
+);
+
+create table if not exists public.ventures (
+  id uuid primary key default gen_random_uuid(),
+  idea_id uuid references public.ideas(id) on delete set null,
+  plan_id uuid references public.plans(id) on delete set null,
+  name text not null check (char_length(name) between 1 and 120),
+  pitch text not null default '',
+  audience text not null default '',
+  value_prop text not null default '',
+  roles text not null default '',
+  stage text not null default 'validar' check (stage in ('validar', 'lanzar', 'primer_cliente', 'ganancias')),
+  created_by uuid not null references auth.users(id) default auth.uid(),
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.venture_budget_items (
+  id uuid primary key default gen_random_uuid(),
+  venture_id uuid not null references public.ventures(id) on delete cascade,
+  name text not null check (char_length(name) between 1 and 120),
+  category text not null default 'otro' check (category in ('equipo', 'permisos', 'marketing', 'insumos', 'otro')),
+  amount numeric(12,2) not null check (amount >= 0),
+  funded_by text not null default 'ambos' check (funded_by in ('ambos', 'luis', 'isabel')),
+  paid boolean not null default false,
+  created_by uuid not null references auth.users(id) default auth.uid(),
+  created_at timestamptz not null default now()
+);
+
 alter table public.plans enable row level security;
 alter table public.contributions enable row level security;
 alter table public.activities enable row level security;
 alter table public.user_preferences enable row level security;
 alter table public.cycles enable row level security;
 alter table public.daily_logs enable row level security;
+alter table public.ideas enable row level security;
+alter table public.idea_votes enable row level security;
+alter table public.ventures enable row level security;
+alter table public.venture_budget_items enable row level security;
 
 drop policy if exists "authenticated users can read plans" on public.plans;
 create policy "authenticated users can read plans" on public.plans for select to authenticated using (true);
@@ -140,12 +192,52 @@ drop policy if exists "users can delete own daily logs" on public.daily_logs;
 drop policy if exists "users can delete shared daily logs" on public.daily_logs;
 create policy "users can delete shared daily logs" on public.daily_logs for delete to authenticated using (auth.uid() in ('6388329a-d2dd-497e-b10d-37707c18463b'::uuid, '7bb8cd1b-65f1-4bed-b38e-38d3e07f4930'::uuid));
 
+drop policy if exists "authenticated users can read ideas" on public.ideas;
+create policy "authenticated users can read ideas" on public.ideas for select to authenticated using (true);
+drop policy if exists "authenticated users can create ideas" on public.ideas;
+create policy "authenticated users can create ideas" on public.ideas for insert to authenticated with check (created_by = auth.uid());
+drop policy if exists "authenticated users can update ideas" on public.ideas;
+create policy "authenticated users can update ideas" on public.ideas for update to authenticated using (true) with check (true);
+drop policy if exists "authenticated users can delete ideas" on public.ideas;
+create policy "authenticated users can delete ideas" on public.ideas for delete to authenticated using (true);
+
+drop policy if exists "authenticated users can read idea votes" on public.idea_votes;
+create policy "authenticated users can read idea votes" on public.idea_votes for select to authenticated using (true);
+drop policy if exists "users can create own idea votes" on public.idea_votes;
+create policy "users can create own idea votes" on public.idea_votes for insert to authenticated with check (user_id = auth.uid());
+drop policy if exists "users can update own idea votes" on public.idea_votes;
+create policy "users can update own idea votes" on public.idea_votes for update to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+drop policy if exists "users can delete own idea votes" on public.idea_votes;
+create policy "users can delete own idea votes" on public.idea_votes for delete to authenticated using (user_id = auth.uid());
+
+drop policy if exists "authenticated users can read ventures" on public.ventures;
+create policy "authenticated users can read ventures" on public.ventures for select to authenticated using (true);
+drop policy if exists "authenticated users can create ventures" on public.ventures;
+create policy "authenticated users can create ventures" on public.ventures for insert to authenticated with check (created_by = auth.uid());
+drop policy if exists "authenticated users can update ventures" on public.ventures;
+create policy "authenticated users can update ventures" on public.ventures for update to authenticated using (true) with check (true);
+drop policy if exists "authenticated users can delete ventures" on public.ventures;
+create policy "authenticated users can delete ventures" on public.ventures for delete to authenticated using (true);
+
+drop policy if exists "authenticated users can read venture budget items" on public.venture_budget_items;
+create policy "authenticated users can read venture budget items" on public.venture_budget_items for select to authenticated using (true);
+drop policy if exists "authenticated users can create venture budget items" on public.venture_budget_items;
+create policy "authenticated users can create venture budget items" on public.venture_budget_items for insert to authenticated with check (created_by = auth.uid() and exists (select 1 from public.ventures where id = venture_id));
+drop policy if exists "authenticated users can update venture budget items" on public.venture_budget_items;
+create policy "authenticated users can update venture budget items" on public.venture_budget_items for update to authenticated using (true) with check (true);
+drop policy if exists "authenticated users can delete venture budget items" on public.venture_budget_items;
+create policy "authenticated users can delete venture budget items" on public.venture_budget_items for delete to authenticated using (true);
+
 alter table public.plans replica identity full;
 alter table public.contributions replica identity full;
 alter table public.activities replica identity full;
 alter table public.user_preferences replica identity full;
 alter table public.cycles replica identity full;
 alter table public.daily_logs replica identity full;
+alter table public.ideas replica identity full;
+alter table public.idea_votes replica identity full;
+alter table public.ventures replica identity full;
+alter table public.venture_budget_items replica identity full;
 
 do $$
 begin
@@ -202,5 +294,25 @@ begin
     select 1 from pg_publication_rel pr join pg_class c on c.oid = pr.prrelid join pg_namespace n on n.oid = c.relnamespace join pg_publication p on p.oid = pr.prpubid
     where p.pubname = 'supabase_realtime' and n.nspname = 'public' and c.relname = 'daily_logs'
   ) then alter publication supabase_realtime add table public.daily_logs; end if;
+
+  if not exists (
+    select 1 from pg_publication_rel pr join pg_class c on c.oid = pr.prrelid join pg_namespace n on n.oid = c.relnamespace join pg_publication p on p.oid = pr.prpubid
+    where p.pubname = 'supabase_realtime' and n.nspname = 'public' and c.relname = 'ideas'
+  ) then alter publication supabase_realtime add table public.ideas; end if;
+
+  if not exists (
+    select 1 from pg_publication_rel pr join pg_class c on c.oid = pr.prrelid join pg_namespace n on n.oid = c.relnamespace join pg_publication p on p.oid = pr.prpubid
+    where p.pubname = 'supabase_realtime' and n.nspname = 'public' and c.relname = 'idea_votes'
+  ) then alter publication supabase_realtime add table public.idea_votes; end if;
+
+  if not exists (
+    select 1 from pg_publication_rel pr join pg_class c on c.oid = pr.prrelid join pg_namespace n on n.oid = c.relnamespace join pg_publication p on p.oid = pr.prpubid
+    where p.pubname = 'supabase_realtime' and n.nspname = 'public' and c.relname = 'ventures'
+  ) then alter publication supabase_realtime add table public.ventures; end if;
+
+  if not exists (
+    select 1 from pg_publication_rel pr join pg_class c on c.oid = pr.prrelid join pg_namespace n on n.oid = c.relnamespace join pg_publication p on p.oid = pr.prpubid
+    where p.pubname = 'supabase_realtime' and n.nspname = 'public' and c.relname = 'venture_budget_items'
+  ) then alter publication supabase_realtime add table public.venture_budget_items; end if;
 end
 $$;

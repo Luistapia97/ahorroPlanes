@@ -340,10 +340,62 @@
   .activity-delete{border:0;background:transparent;color:var(--ink-faint);font-size:16px;padding:3px 6px;border-radius:6px;}
   .activity-delete:hover{background:var(--coral-soft);color:var(--coral);}
 
+  /* EMPRENDE */
+  .section-hint{font-size:12.5px;color:var(--ink-faint);}
+  .idea-rank{width:42px;height:42px;border-radius:12px;background:var(--gold-soft);color:#8A6B27;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-weight:600;font-size:15px;flex-shrink:0;}
+  .idea-desc{font-size:13px;color:var(--ink-soft);line-height:1.45;margin:6px 0 0;}
+  .idea-score{display:flex;align-items:baseline;gap:4px;}
+  .idea-score-value{font-family:var(--font-mono);font-size:26px;font-weight:600;letter-spacing:-.5px;}
+  .idea-score-max{font-family:var(--font-mono);font-size:13px;color:var(--ink-faint);}
+  .criteria-bars{display:flex;flex-direction:column;gap:6px;}
+  .criteria-row{display:grid;grid-template-columns:70px 1fr;align-items:center;gap:10px;font-size:11.5px;color:var(--ink-soft);font-weight:700;}
+  .progress-track{height:6px;border-radius:99px;background:var(--surface-alt);overflow:hidden;}
+  .progress-track i{display:block;height:100%;border-radius:inherit;background:var(--teal-2);}
+  .prediction-card .progress-track{background:rgba(255,255,255,.14);margin:12px 0 6px;}
+  .prediction-card .progress-track i{background:var(--gold);}
+  .vote-status{display:flex;gap:6px;flex-wrap:wrap;}
+  .rating-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
+  .rating-grid label{position:relative;margin:0;}
+  .rating-grid input{position:absolute;opacity:0;pointer-events:none;}
+  .rating-grid span{display:flex;align-items:center;justify-content:center;height:40px;border:1px solid var(--border);border-radius:9px;font-family:var(--font-mono);font-weight:600;font-size:14px;color:var(--ink-soft);cursor:pointer;}
+  .rating-grid input:checked+span{background:var(--teal-soft);border-color:var(--teal-2);color:var(--teal-2);}
+  .rating-grid input:focus-visible+span{outline:2px solid var(--teal-2);outline-offset:2px;}
+  .field-hint{font-weight:500;color:var(--ink-faint);}
+  .modal-note{color:var(--ink-soft);font-size:13.5px;line-height:1.45;margin:-6px 0 16px;}
+  .discard-list{display:flex;flex-direction:column;gap:8px;}
+  .discard-item{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;font-size:13.5px;color:var(--ink-soft);}
+  .discard-item span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .stage-stepper{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+  .stage-step{display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 6px;border-radius:12px;background:var(--surface-alt);border:1px solid transparent;color:var(--ink-faint);font-family:inherit;font-size:11.5px;font-weight:700;text-align:center;}
+  button.stage-step:hover{border-color:var(--teal-2);}
+  .stage-step.done{background:var(--teal-soft);color:var(--teal-2);}
+  .stage-step.current{background:var(--teal);color:#fff;}
+  .stage-emoji{font-size:18px;line-height:1;}
+  .stage-stepper.compact .stage-step{padding:7px 4px;}
+  .stage-stepper.compact .stage-label{display:none;}
+  .back-link{background:none;border:none;color:var(--teal-2);font-size:13px;font-weight:700;padding:0;margin-bottom:8px;}
+  .venture-layout{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(280px,1fr);gap:22px;align-items:start;margin-top:22px;}
+  .venture-col{display:flex;flex-direction:column;gap:16px;}
+  .canvas-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .canvas-cell{background:var(--surface-alt);border-radius:12px;padding:12px 14px;}
+  .canvas-cell small{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;font-weight:800;color:var(--ink-faint);margin-bottom:5px;}
+  .canvas-cell p{margin:0;font-size:13.5px;line-height:1.45;white-space:pre-line;overflow-wrap:anywhere;}
+  .canvas-cell p.empty{color:var(--ink-faint);font-style:italic;}
+  .card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;}
+  .card-head .agenda-title{margin:0;}
+  .budget-item{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid var(--border);}
+  .budget-item:last-child{border-bottom:none;}
+  .budget-item-body{flex:1;min-width:0;}
+  .budget-item-body .agenda-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .budget-item-amount{font-family:var(--font-mono);font-weight:600;font-size:13.5px;white-space:nowrap;}
+  .paid-toggle{border:1px solid var(--border);background:var(--surface);border-radius:99px;font-size:11px;font-weight:700;padding:4px 10px;color:var(--coral);white-space:nowrap;}
+  .paid-toggle.done{background:var(--teal-soft);border-color:transparent;color:var(--teal-2);}
+
   @media (max-width:980px){
     .stat-grid{grid-template-columns:repeat(2,1fr);}
     .cal-wrap{grid-template-columns:1fr;}
     .menstrual-layout{grid-template-columns:1fr;}
+    .venture-layout{grid-template-columns:1fr;}
   }
   @media (max-width:760px){
     .sidebar{position:fixed;bottom:0;left:0;right:0;top:auto;width:100%;height:auto;
@@ -380,6 +432,11 @@
     .prediction-meta small{font-size:9px;}
     .choice-grid span{font-size:10px;min-height:42px;padding:4px 2px;}
     .modal{padding:20px;max-height:92vh;}
+    .canvas-grid{grid-template-columns:1fr;}
+    .stage-label{font-size:9.5px;}
+    .budget-item{flex-wrap:wrap;row-gap:6px;}
+    .budget-item-body{flex:1 1 calc(100% - 50px);}
+    .budget-item-amount{margin-left:45px;margin-right:auto;}
   }
 </style>
 </head>
@@ -408,6 +465,10 @@
       <button class="nav-item" data-view="menstrual">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.35-7-10a4 4 0 017-2.65A4 4 0 0119 11c0 5.65-7 10-7 10z"/><path d="M8 4h.01M16 4h.01"/></svg>
         Mi ciclo
+      </button>
+      <button class="nav-item" data-view="ventures">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 00-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0012 3z"/></svg>
+        Emprende
       </button>
     </nav>
     <div class="sidebar-foot">
@@ -449,11 +510,12 @@
   /* ---------------- DATA LAYER ---------------- */
   let supabase = null;
   let realtimeChannel = null;
-  let state = { plans: [], activities: [], menstrual: { preferences: null, cycles: [], dailyLogs: [] } };
+  let state = { plans: [], activities: [], menstrual: { preferences: null, cycles: [], dailyLogs: [] }, ideas: [], ideaVotes: [], ventures: [], budgetItems: [] };
   let currentView = 'dashboard';
   let calDate = new Date();
   let activeDetailId = null;
   let activeActivityDate = null;
+  let activeVentureId = null;
   let currentUserEmail = '';
   let currentUserId = null;
   let googleClientId = '';
@@ -466,6 +528,7 @@
     boda:      {label:'Boda',        emoji:'💍'},
     tecnologia:{label:'Tecnología',  emoji:'💻'},
     salud:     {label:'Salud',       emoji:'🩺'},
+    negocio:   {label:'Negocio',     emoji:'🚀'},
     otro:      {label:'Otro',        emoji:'⭐'}
   };
 
@@ -500,22 +563,35 @@
   }
 
   async function loadData(){
-    const [{data:plans,error:plansError},{data:contributions,error:contributionsError},{data:activities,error:activitiesError},{data:preferences,error:preferencesError},{data:cycles,error:cyclesError},{data:dailyLogs,error:logsError}] = await Promise.all([
+    const results = await Promise.all([
       supabase.from('plans').select('*').order('target_date'),
       supabase.from('contributions').select('*').order('date',{ascending:false}),
       supabase.from('activities').select('*').order('date').order('time'),
       supabase.from('user_preferences').select('*').eq('user_id',currentUserId).maybeSingle(),
       supabase.from('cycles').select('*').order('start_date',{ascending:false}),
-      supabase.from('daily_logs').select('*').order('date',{ascending:false})
+      supabase.from('daily_logs').select('*').order('date',{ascending:false}),
+      supabase.from('ideas').select('*').order('created_at',{ascending:false}),
+      supabase.from('idea_votes').select('*'),
+      supabase.from('ventures').select('*').order('created_at',{ascending:false}),
+      supabase.from('venture_budget_items').select('*').order('created_at')
     ]);
-    if(plansError) throw plansError;
-    if(contributionsError) throw contributionsError;
-    if(activitiesError) throw activitiesError;
-    if(preferencesError) throw preferencesError;
-    if(cyclesError) throw cyclesError;
-    if(logsError) throw logsError;
-    state = fromRows(plans||[], contributions||[], activities||[], preferences, cycles, dailyLogs);
+    const failed = results.find(result=>result.error);
+    if(failed) throw failed.error;
+    const [plans,contributions,activities,preferences,cycles,dailyLogs,ideas,ideaVotes,ventures,budgetItems] = results.map(result=>result.data);
+    state = {...fromRows(plans||[], contributions||[], activities||[], preferences, cycles, dailyLogs), ...ventureStateFromRows(ideas||[], ideaVotes||[], ventures||[], budgetItems||[])};
     scheduleActivityNotifications();
+  }
+
+  function ventureStateFromRows(ideas, ideaVotes, ventures, budgetItems){
+    return {
+      ideas:ideas.map(idea=>({id:idea.id, title:idea.title, description:idea.description||'', status:idea.status, createdBy:idea.created_by})),
+      ideaVotes:ideaVotes.map(vote=>({id:vote.id, ideaId:vote.idea_id, userId:vote.user_id, interest:vote.interest, investment:vote.investment, timeNeeded:vote.time_needed, risk:vote.risk})),
+      ventures:ventures.map(venture=>({
+        id:venture.id, ideaId:venture.idea_id, planId:venture.plan_id, name:venture.name, pitch:venture.pitch||'',
+        audience:venture.audience||'', valueProp:venture.value_prop||'', roles:venture.roles||'', stage:venture.stage
+      })),
+      budgetItems:budgetItems.map(item=>({id:item.id, ventureId:item.venture_id, name:item.name, category:item.category, amount:Number(item.amount), fundedBy:item.funded_by, paid:!!item.paid}))
+    };
   }
 
   function subscribeToChanges(){
@@ -527,6 +603,10 @@
       .on('postgres_changes',{event:'*',schema:'public',table:'user_preferences'},refreshFromRealtime)
       .on('postgres_changes',{event:'*',schema:'public',table:'cycles'},refreshFromRealtime)
       .on('postgres_changes',{event:'*',schema:'public',table:'daily_logs'},refreshFromRealtime)
+      .on('postgres_changes',{event:'*',schema:'public',table:'ideas'},refreshFromRealtime)
+      .on('postgres_changes',{event:'*',schema:'public',table:'idea_votes'},refreshFromRealtime)
+      .on('postgres_changes',{event:'*',schema:'public',table:'ventures'},refreshFromRealtime)
+      .on('postgres_changes',{event:'*',schema:'public',table:'venture_budget_items'},refreshFromRealtime)
       .subscribe();
   }
 
@@ -574,6 +654,82 @@
 
   async function removePlan(id){
     const {error} = await supabase.from('plans').delete().eq('id',id);
+    if(error) throw error;
+  }
+
+  async function saveIdea(id,data){
+    const row = {title:data.title.trim(), description:(data.description||'').trim()};
+    const {error} = id ? await supabase.from('ideas').update(row).eq('id',id) : await supabase.from('ideas').insert(row);
+    if(error) throw error;
+  }
+
+  async function setIdeaStatus(id,status){
+    const {error} = await supabase.from('ideas').update({status}).eq('id',id);
+    if(error) throw error;
+  }
+
+  async function removeIdea(id){
+    const {error} = await supabase.from('ideas').delete().eq('id',id);
+    if(error) throw error;
+  }
+
+  async function saveIdeaVote(ideaId,data){
+    const {error} = await supabase.from('idea_votes').upsert({
+      idea_id:ideaId, user_id:currentUserId, interest:Number(data.interest), investment:Number(data.investment),
+      time_needed:Number(data.timeNeeded), risk:Number(data.risk), updated_at:new Date().toISOString()
+    },{onConflict:'idea_id,user_id'});
+    if(error) throw error;
+  }
+
+  function ventureRow(data){
+    return {name:data.name.trim(), pitch:(data.pitch||'').trim(), audience:(data.audience||'').trim(), value_prop:(data.valueProp||'').trim(), roles:(data.roles||'').trim()};
+  }
+
+  async function createVentureFromIdea(ideaId,data){
+    const {data:venture,error} = await supabase.from('ventures').insert({...ventureRow(data), idea_id:ideaId}).select('id').single();
+    if(error) throw error;
+    await setIdeaStatus(ideaId,'proyecto');
+    return venture.id;
+  }
+
+  async function updateVenture(id,fields){
+    const {error} = await supabase.from('ventures').update(fields).eq('id',id);
+    if(error) throw error;
+  }
+
+  async function removeVenture(venture){
+    const {error} = await supabase.from('ventures').delete().eq('id',venture.id);
+    if(error) throw error;
+    if(venture.ideaId) await setIdeaStatus(venture.ideaId,'activa');
+  }
+
+  async function saveBudgetItem(ventureId,id,data){
+    const row = {name:data.name.trim(), category:data.category, amount:Number(data.amount), funded_by:data.fundedBy, paid:data.paid==='on'};
+    const {error} = id ? await supabase.from('venture_budget_items').update(row).eq('id',id) : await supabase.from('venture_budget_items').insert({...row, venture_id:ventureId});
+    if(error) throw error;
+  }
+
+  async function setBudgetItemPaid(id,paid){
+    const {error} = await supabase.from('venture_budget_items').update({paid}).eq('id',id);
+    if(error) throw error;
+  }
+
+  async function removeBudgetItem(id){
+    const {error} = await supabase.from('venture_budget_items').delete().eq('id',id);
+    if(error) throw error;
+  }
+
+  async function createCapitalPlan(venture,data){
+    const {data:plan,error} = await supabase.from('plans').insert({
+      name:`Capital: ${venture.name}`.slice(0,120), category:'negocio', target_date:data.targetDate,
+      target_cost:Number(data.targetCost), initial:Number(data.initial)||0, description:'Capital de arranque del proyecto en Emprende.'
+    }).select('id').single();
+    if(error) throw error;
+    await updateVenture(venture.id,{plan_id:plan.id});
+  }
+
+  async function updatePlanTarget(planId,targetCost){
+    const {error} = await supabase.from('plans').update({target_cost:targetCost}).eq('id',planId);
     if(error) throw error;
   }
 
@@ -969,13 +1125,15 @@
   /* ---------------- RENDER: SHELL ---------------- */
   function setView(view){
     currentView = view;
+    if(view==='ventures') activeVentureId = null;
     document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
     render();
   }
 
   function render(){
     const main = document.getElementById('main');
-    const content = currentView==='dashboard' ? renderDashboard() : currentView==='plans' ? renderPlansView() : currentView==='calendar' ? renderCalendarView() : renderMenstrualView();
+    const views = {dashboard:renderDashboard, plans:renderPlansView, calendar:renderCalendarView, menstrual:renderMenstrualView, ventures:renderVenturesView};
+    const content = (views[currentView] || renderDashboard)();
     main.innerHTML = renderSessionBar() + content;
     attachViewEvents();
     updateSidebarStat();
@@ -1529,6 +1687,481 @@
     }).catch(()=>showToast('No se pudo eliminar el plan.'));
   }
 
+  /* ---------------- EMPRENDE ---------------- */
+  const PARTNERS = {ambos:'Ambos', luis:'Luis', isabel:'Isabel'};
+  const BUDGET_CATEGORIES = {
+    equipo:   {label:'Equipo',    emoji:'🛠️'},
+    permisos: {label:'Permisos',  emoji:'📄'},
+    marketing:{label:'Marketing', emoji:'📣'},
+    insumos:  {label:'Insumos',   emoji:'📦'},
+    otro:     {label:'Otro',      emoji:'⭐'}
+  };
+  const VENTURE_STAGES = [
+    {key:'validar',        label:'Validar',            emoji:'🔍'},
+    {key:'lanzar',         label:'Lanzar',             emoji:'🚀'},
+    {key:'primer_cliente', label:'Primer cliente',     emoji:'🤝'},
+    {key:'ganancias',      label:'Primeras ganancias', emoji:'💸'}
+  ];
+  // Cada criterio se califica de 1 a 5, donde 5 siempre es lo más favorable para la idea.
+  const IDEA_CRITERIA = [
+    {key:'interest',   label:'Interés',   hint:'5 = nos emociona mucho'},
+    {key:'investment', label:'Inversión', hint:'5 = necesita poco dinero'},
+    {key:'timeNeeded', label:'Tiempo',    hint:'5 = cabe en nuestra agenda'},
+    {key:'risk',       label:'Riesgo',    hint:'5 = riesgo bajo'}
+  ];
+
+  function ideaScore(idea){
+    const votes = state.ideaVotes.filter(vote=>vote.ideaId===idea.id);
+    const mine = votes.find(vote=>vote.userId===currentUserId);
+    const partner = votes.find(vote=>vote.userId!==currentUserId);
+    if(!votes.length) return {votes, mine, partner, avg:null, byCriterion:{}};
+    const byCriterion = Object.fromEntries(IDEA_CRITERIA.map(c=>[c.key, votes.reduce((s,vote)=>s+vote[c.key],0)/votes.length]));
+    const avg = Object.values(byCriterion).reduce((s,value)=>s+value,0)/IDEA_CRITERIA.length;
+    return {votes, mine, partner, avg, byCriterion};
+  }
+
+  function ventureBudget(venture){
+    const items = state.budgetItems.filter(item=>item.ventureId===venture.id);
+    const total = items.reduce((s,item)=>s+item.amount,0);
+    const paid = items.filter(item=>item.paid).reduce((s,item)=>s+item.amount,0);
+    const perPartner = {luis:0, isabel:0};
+    items.forEach(item=>{
+      if(item.fundedBy==='ambos'){ perPartner.luis += item.amount/2; perPartner.isabel += item.amount/2; }
+      else perPartner[item.fundedBy] += item.amount;
+    });
+    return {items, total, paid, pending:total-paid, perPartner, pct: total>0 ? Math.round((paid/total)*100) : 0};
+  }
+
+  async function runAction(task, successMsg, errorMsg){
+    try{
+      await task();
+      await loadData();
+      if(successMsg) showToast(successMsg);
+      render();
+      return true;
+    }catch(error){
+      console.error(errorMsg, error);
+      showToast(errorMsg);
+      return false;
+    }
+  }
+
+  function renderVenturesView(){
+    const venture = activeVentureId && state.ventures.find(v=>v.id===activeVentureId);
+    if(venture) return renderVentureDetail(venture);
+    activeVentureId = null;
+    const ideas = state.ideas.filter(idea=>idea.status==='activa')
+      .map(idea=>({idea, score:ideaScore(idea)}))
+      .sort((a,b)=>(b.score.avg ?? -1)-(a.score.avg ?? -1));
+    const discarded = state.ideas.filter(idea=>idea.status==='descartada');
+    return `
+      <div class="topbar">
+        <div>
+          <h1 class="page-title">Emprende</h1>
+          <p class="page-sub">Anoten sus ideas, califíquenlas juntos y conviertan la mejor en un proyecto con presupuesto.</p>
+        </div>
+        <button class="btn btn-primary" data-action="new-idea">${iconPlus()} Nueva idea</button>
+      </div>
+
+      ${state.ventures.length ? `
+        <div class="section-head"><h2 class="section-title">Proyectos en marcha</h2></div>
+        <div class="plan-grid">${state.ventures.map(ventureCard).join('')}</div>` : ''}
+
+      <div class="section-head">
+        <h2 class="section-title">Banco de ideas</h2>
+        ${ideas.length>1 ? '<span class="section-hint">Ordenadas por calificación</span>' : ''}
+      </div>
+      ${ideas.length ? `<div class="plan-grid">${ideas.map(({idea,score},index)=>ideaCard(idea,score,index)).join('')}</div>` : `
+        <div class="empty-state">
+          <div class="empty-emoji">💡</div>
+          <h3>${state.ventures.length ? 'No hay ideas pendientes' : 'Todavía no hay ideas'}</h3>
+          <p>Anoten cualquier idea de negocio, aunque sea una ocurrencia. Después la califican entre los dos.</p>
+          <button class="btn btn-primary" data-action="new-idea" style="margin-top:10px;">${iconPlus()} Anotar una idea</button>
+        </div>`}
+
+      ${discarded.length ? `
+        <div class="section-head"><h2 class="section-title">Descartadas</h2></div>
+        <div class="discard-list">${discarded.map(idea=>`
+          <div class="discard-item">
+            <span>${escapeHtml(idea.title)}</span>
+            <button class="btn btn-ghost btn-sm" data-action="restore-idea" data-id="${idea.id}">Recuperar</button>
+            <button class="contrib-action delete" data-action="delete-idea" data-id="${idea.id}" title="Eliminar">✕</button>
+          </div>`).join('')}
+        </div>` : ''}
+    `;
+  }
+
+  function ideaCard(idea, score, index){
+    return `
+      <div class="plan-card">
+        <div class="plan-card-top">
+          <div class="idea-rank">${score.avg!=null ? '#'+(index+1) : '💡'}</div>
+          <button class="plan-menu-btn" data-action="edit-idea" data-id="${idea.id}" title="Editar">${iconEdit()}</button>
+        </div>
+        <div>
+          <div class="plan-name">${escapeHtml(idea.title)}</div>
+          ${idea.description ? `<p class="idea-desc">${escapeHtml(idea.description)}</p>` : ''}
+        </div>
+        <div class="idea-score"><span class="idea-score-value">${score.avg!=null ? score.avg.toFixed(1) : '—'}</span><span class="idea-score-max">/ 5</span></div>
+        <div class="criteria-bars">
+          ${IDEA_CRITERIA.map(c=>`<div class="criteria-row"><span>${c.label}</span><div class="progress-track"><i style="width:${((score.byCriterion[c.key]||0)/5)*100}%"></i></div></div>`).join('')}
+        </div>
+        <div class="vote-status">
+          <span class="status-pill ${score.mine?'ok':'warn'}">${score.mine?'✓ Tu voto':'Falta tu voto'}</span>
+          <span class="status-pill ${score.partner?'ok':'warn'}">${score.partner?'✓ Tu pareja':'Falta tu pareja'}</span>
+        </div>
+        <div class="plan-foot">
+          <button class="btn btn-ghost btn-sm" data-action="vote-idea" data-id="${idea.id}">${score.mine?'Cambiar voto':'Calificar'}</button>
+          <button class="btn btn-gold btn-sm" data-action="idea-to-venture" data-id="${idea.id}">Iniciar proyecto</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function stageStepper(venture, interactive){
+    const current = VENTURE_STAGES.findIndex(stage=>stage.key===venture.stage);
+    const tag = interactive ? 'button' : 'div';
+    return `<div class="stage-stepper ${interactive?'':'compact'}">${VENTURE_STAGES.map((stage,index)=>{
+      const cls = index<current ? 'done' : index===current ? 'current' : '';
+      const attrs = interactive ? `type="button" data-action="set-stage" data-id="${venture.id}" data-stage="${stage.key}"` : `title="${stage.label}"`;
+      return `<${tag} class="stage-step ${cls}" ${attrs}><span class="stage-emoji">${stage.emoji}</span><span class="stage-label">${stage.label}</span></${tag}>`;
+    }).join('')}</div>`;
+  }
+
+  function ventureCard(venture){
+    const budget = ventureBudget(venture);
+    const stage = VENTURE_STAGES.find(item=>item.key===venture.stage) || VENTURE_STAGES[0];
+    return `
+      <div class="plan-card">
+        <div class="plan-card-top">
+          <div class="plan-icon">${stage.emoji}</div>
+          <button class="plan-menu-btn" data-action="edit-venture" data-id="${venture.id}" title="Editar">${iconEdit()}</button>
+        </div>
+        <div>
+          <div class="plan-cat">Etapa: ${stage.label}</div>
+          <div class="plan-name">${escapeHtml(venture.name)}</div>
+        </div>
+        ${stageStepper(venture,false)}
+        <div>
+          <div class="plan-amounts"><b>${fmtMoney(budget.paid)}</b> pagado de ${fmtMoney(budget.total)}</div>
+          <div class="progress-track" style="margin-top:8px;"><i style="width:${budget.pct}%"></i></div>
+        </div>
+        <div class="plan-foot">
+          <div class="plan-foot-date">${budget.items.length} partida${budget.items.length===1?'':'s'}</div>
+          <button class="btn btn-primary btn-sm" data-action="open-venture" data-id="${venture.id}">Abrir proyecto</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function canvasCell(label, value){
+    return `<div class="canvas-cell"><small>${label}</small>${value ? `<p>${escapeHtml(value)}</p>` : '<p class="empty">Sin definir</p>'}</div>`;
+  }
+
+  function renderVentureDetail(venture){
+    const budget = ventureBudget(venture);
+    const plan = venture.planId && state.plans.find(item=>item.id===venture.planId);
+    return `
+      <button class="back-link" data-action="close-venture">← Volver a Emprende</button>
+      <div class="topbar">
+        <div>
+          <h1 class="page-title">${escapeHtml(venture.name)}</h1>
+          <p class="page-sub">Avancen etapa por etapa. Toquen una etapa para marcarla como la actual.</p>
+        </div>
+        <button class="btn btn-ghost" data-action="edit-venture" data-id="${venture.id}">${iconEdit()} Editar ficha</button>
+      </div>
+      ${stageStepper(venture,true)}
+
+      <div class="venture-layout">
+        <div class="venture-col">
+          <div class="agenda-card">
+            <h3 class="agenda-title">Ficha del proyecto</h3>
+            <div class="canvas-grid">
+              ${canvasCell('Qué vendemos', venture.pitch)}
+              ${canvasCell('A quién', venture.audience)}
+              ${canvasCell('Por qué nos comprarían', venture.valueProp)}
+              ${canvasCell('Quién hace qué', venture.roles)}
+            </div>
+          </div>
+
+          <div class="agenda-card">
+            <div class="card-head">
+              <h3 class="agenda-title">Presupuesto de arranque</h3>
+              <button class="btn btn-gold btn-sm" data-action="new-budget-item" data-id="${venture.id}">${iconPlus()} Partida</button>
+            </div>
+            ${budget.items.length ? budget.items.map(item=>{
+              const cat = BUDGET_CATEGORIES[item.category] || BUDGET_CATEGORIES.otro;
+              return `
+                <div class="budget-item ${item.paid?'paid':''}">
+                  <div class="agenda-emoji">${cat.emoji}</div>
+                  <div class="budget-item-body">
+                    <div class="agenda-name">${escapeHtml(item.name)}</div>
+                    <div class="agenda-sub">${cat.label} · pone ${PARTNERS[item.fundedBy] || 'Ambos'}</div>
+                  </div>
+                  <span class="budget-item-amount">${fmtMoney(item.amount)}</span>
+                  <button class="paid-toggle ${item.paid?'done':''}" data-action="toggle-paid" data-id="${item.id}" title="Cambiar estado de pago">${item.paid?'✓ Pagado':'Pendiente'}</button>
+                  <button class="contrib-action" data-action="edit-budget-item" data-id="${item.id}" title="Editar">Editar</button>
+                </div>`;
+            }).join('') : '<div class="muted-empty">Agreguen lo que necesitan para arrancar: equipo, permisos, marketing, insumos…</div>'}
+          </div>
+        </div>
+
+        <div class="venture-col">
+          <div class="prediction-card">
+            <h3 class="agenda-title">Inversión total</h3>
+            <div class="prediction-main">${fmtMoney(budget.total)}</div>
+            <div class="progress-track"><i style="width:${budget.pct}%"></i></div>
+            <div class="prediction-sub">${budget.pct}% ya pagado</div>
+            <div style="margin-top:12px;">
+              <div class="quote-row"><span>Pagado</span><b>${fmtMoney(budget.paid)}</b></div>
+              <div class="quote-row"><span>Falta</span><b>${fmtMoney(budget.pending)}</b></div>
+              <div class="quote-row"><span>Pone Luis</span><b>${fmtMoney(budget.perPartner.luis)}</b></div>
+              <div class="quote-row"><span>Pone Isabel</span><b>${fmtMoney(budget.perPartner.isabel)}</b></div>
+            </div>
+          </div>
+
+          <div class="agenda-card">
+            <h3 class="agenda-title">Ahorro para el capital</h3>
+            ${plan ? capitalPlanSummary(venture, plan, budget) : `
+              <p class="cycle-note" style="margin:0 0 14px;">Creen un plan de ahorro con la meta de este presupuesto. Aparecerá en Mis planes junto a los demás.</p>
+              <button class="btn btn-primary" data-action="new-capital-plan" data-id="${venture.id}" style="width:100%;justify-content:center;" ${budget.total>0?'':'disabled'}>Crear plan de ahorro</button>
+              ${budget.total>0 ? '' : '<div class="cycle-note">Primero agreguen al menos una partida.</div>'}`}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function capitalPlanSummary(venture, plan, budget){
+    const q = computeQuote(plan);
+    const outOfSync = Math.round(plan.targetCost) !== Math.round(budget.total);
+    return `
+      <div class="plan-body">
+        <div class="ring" style="--pct:${q.pct}; --ring-color:${statusColorVar(q.status)};">
+          <div class="ring-inner"><span class="ring-pct">${q.pct}%</span></div>
+        </div>
+        <div style="min-width:0;">
+          <div class="plan-name">${escapeHtml(plan.name)}</div>
+          <div class="plan-amounts"><b>${fmtMoney(q.saved)}</b> de ${fmtMoney(q.cost)}</div>
+          <span class="status-pill ${q.status}">${statusLabel(q.status)}</span>
+        </div>
+      </div>
+      <div class="plan-foot" style="margin-top:14px;">
+        <div class="plan-foot-date">Meta: <b>${fmtDate(plan.targetDate)}</b></div>
+        <button class="btn btn-gold btn-sm" data-action="contribute" data-id="${plan.id}">Aportar</button>
+      </div>
+      ${outOfSync ? `<button class="btn btn-ghost btn-sm" data-action="sync-capital-plan" data-id="${venture.id}" style="width:100%;justify-content:center;margin-top:12px;">Actualizar meta a ${fmtMoney(budget.total)}</button>` : ''}
+    `;
+  }
+
+  function openIdeaForm(existing){
+    const isEdit = !!existing;
+    const idea = existing || {id:null, title:'', description:''};
+    openModal(`
+      <div class="modal-head">
+        <h2 class="modal-title">${isEdit?'Editar idea':'Nueva idea'}</h2>
+        <button class="modal-close" data-action="close-modal">✕</button>
+      </div>
+      <form id="ideaForm">
+        <div class="field">
+          <label>Idea</label>
+          <input type="text" name="title" required maxlength="120" placeholder="Ej. Postres por encargo" value="${escapeHtml(idea.title)}">
+        </div>
+        <div class="field">
+          <label>¿Cómo funcionaría? (opcional)</label>
+          <textarea name="description" rows="3" placeholder="Qué se te ocurrió, cómo se vería, cómo ganaríamos dinero...">${escapeHtml(idea.description)}</textarea>
+        </div>
+        <div class="modal-actions">
+          ${isEdit ? `<button type="button" class="btn btn-ghost" data-action="discard-idea" data-id="${idea.id}" style="color:var(--coral);margin-right:auto;">Descartar</button>` : ''}
+          <button type="button" class="btn btn-ghost" data-action="close-modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">${isEdit?'Guardar cambios':'Guardar idea'}</button>
+        </div>
+      </form>
+    `);
+    document.getElementById('ideaForm').addEventListener('submit', async(e)=>{
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.target).entries());
+      if(await runAction(()=>saveIdea(idea.id,data), isEdit?'Idea actualizada':'Idea guardada. ¡Ahora califíquenla!', 'No se pudo guardar la idea.')) closeModal();
+    });
+  }
+
+  function openIdeaVote(idea){
+    const mine = ideaScore(idea).mine;
+    openModal(`
+      <div class="modal-head">
+        <h2 class="modal-title">Calificar idea</h2>
+        <button class="modal-close" data-action="close-modal">✕</button>
+      </div>
+      <p class="modal-note"><b>${escapeHtml(idea.title)}</b><br>Cada uno califica por su cuenta y la app promedia los dos votos.</p>
+      <form id="voteForm">
+        ${IDEA_CRITERIA.map(c=>`
+          <div class="field">
+            <label>${c.label} <span class="field-hint">· ${c.hint}</span></label>
+            <div class="rating-grid">${[1,2,3,4,5].map(n=>`<label><input type="radio" name="${c.key}" value="${n}" required ${mine && mine[c.key]===n ? 'checked' : ''}><span>${n}</span></label>`).join('')}</div>
+          </div>`).join('')}
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" data-action="close-modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Guardar voto</button>
+        </div>
+      </form>
+    `);
+    document.getElementById('voteForm').addEventListener('submit', async(e)=>{
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.target).entries());
+      if(await runAction(()=>saveIdeaVote(idea.id,data), 'Voto guardado', 'No se pudo guardar el voto.')) closeModal();
+    });
+  }
+
+  function openVentureForm(existing, idea){
+    const isEdit = !!existing;
+    const venture = existing || {id:null, name:idea.title, pitch:idea.description, audience:'', valueProp:'', roles:''};
+    openModal(`
+      <div class="modal-head">
+        <h2 class="modal-title">${isEdit?'Editar ficha':'Convertir en proyecto'}</h2>
+        <button class="modal-close" data-action="close-modal">✕</button>
+      </div>
+      ${isEdit ? '' : '<p class="modal-note">Respondan estas preguntas en corto. Pueden editarlas cuando quieran.</p>'}
+      <form id="ventureForm">
+        <div class="field">
+          <label>Nombre del proyecto</label>
+          <input type="text" name="name" required maxlength="120" value="${escapeHtml(venture.name)}">
+        </div>
+        <div class="field">
+          <label>¿Qué vendemos?</label>
+          <textarea name="pitch" rows="2" placeholder="Producto o servicio">${escapeHtml(venture.pitch)}</textarea>
+        </div>
+        <div class="field">
+          <label>¿A quién?</label>
+          <textarea name="audience" rows="2" placeholder="Ej. Oficinas de la zona, mamás primerizas...">${escapeHtml(venture.audience)}</textarea>
+        </div>
+        <div class="field">
+          <label>¿Por qué nos comprarían?</label>
+          <textarea name="valueProp" rows="2" placeholder="Qué nos hace diferentes o mejores">${escapeHtml(venture.valueProp)}</textarea>
+        </div>
+        <div class="field">
+          <label>¿Quién hace qué?</label>
+          <textarea name="roles" rows="2" placeholder="Luis: ventas y redes&#10;Isabel: producción y proveedores">${escapeHtml(venture.roles)}</textarea>
+        </div>
+        <div class="modal-actions">
+          ${isEdit ? `<button type="button" class="btn btn-ghost" data-action="delete-venture" data-id="${venture.id}" style="color:var(--coral);margin-right:auto;">Eliminar</button>` : ''}
+          <button type="button" class="btn btn-ghost" data-action="close-modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">${isEdit?'Guardar cambios':'Crear proyecto'}</button>
+        </div>
+      </form>
+    `);
+    document.getElementById('ventureForm').addEventListener('submit', async(e)=>{
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.target).entries());
+      const task = isEdit
+        ? ()=>updateVenture(venture.id, ventureRow(data))
+        : async()=>{ activeVentureId = await createVentureFromIdea(idea.id, data); };
+      if(await runAction(task, isEdit?'Ficha actualizada':'¡Proyecto creado! Ahora armen el presupuesto.', 'No se pudo guardar el proyecto.')) closeModal();
+    });
+  }
+
+  function openBudgetItemForm(ventureId, existing){
+    const isEdit = !!existing;
+    const item = existing || {id:null, name:'', category:'equipo', amount:'', fundedBy:'ambos', paid:false};
+    const catOptions = Object.entries(BUDGET_CATEGORIES).map(([key,cat])=>`<option value="${key}" ${item.category===key?'selected':''}>${cat.emoji} ${cat.label}</option>`).join('');
+    const partnerOptions = Object.entries(PARTNERS).map(([key,label])=>`<option value="${key}" ${item.fundedBy===key?'selected':''}>${label}</option>`).join('');
+    openModal(`
+      <div class="modal-head">
+        <h2 class="modal-title">${isEdit?'Editar partida':'Nueva partida'}</h2>
+        <button class="modal-close" data-action="close-modal">✕</button>
+      </div>
+      <form id="budgetItemForm">
+        <div class="field">
+          <label>Concepto</label>
+          <input type="text" name="name" required maxlength="120" placeholder="Ej. Horno, logo, permiso municipal" value="${escapeHtml(item.name)}">
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Categoría</label><select name="category">${catOptions}</select></div>
+          <div class="field"><label>Monto</label><input type="number" name="amount" min="0" step="0.01" required placeholder="$0" value="${item.amount}"></div>
+        </div>
+        <div class="field"><label>¿Quién lo pone?</label><select name="fundedBy">${partnerOptions}</select></div>
+        <div class="sex-toggle"><label for="budgetPaid">Ya está pagado</label><input id="budgetPaid" type="checkbox" name="paid" ${item.paid?'checked':''}></div>
+        <div class="modal-actions">
+          ${isEdit ? `<button type="button" class="btn btn-ghost" data-action="delete-budget-item" data-id="${item.id}" style="color:var(--coral);margin-right:auto;">Eliminar</button>` : ''}
+          <button type="button" class="btn btn-ghost" data-action="close-modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">${isEdit?'Guardar cambios':'Agregar partida'}</button>
+        </div>
+      </form>
+    `);
+    document.getElementById('budgetItemForm').addEventListener('submit', async(e)=>{
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.target).entries());
+      if(await runAction(()=>saveBudgetItem(ventureId,item.id,data), isEdit?'Partida actualizada':'Partida agregada', 'No se pudo guardar la partida.')) closeModal();
+    });
+  }
+
+  function openCapitalPlanForm(venture){
+    const budget = ventureBudget(venture);
+    openModal(`
+      <div class="modal-head">
+        <h2 class="modal-title">Plan de ahorro para el capital</h2>
+        <button class="modal-close" data-action="close-modal">✕</button>
+      </div>
+      <p class="modal-note">Se creará el plan <b>Capital: ${escapeHtml(venture.name)}</b> en Mis planes, con la inversión total como meta.</p>
+      <form id="capitalPlanForm">
+        <div class="field-row">
+          <div class="field"><label>Meta</label><input type="number" name="targetCost" min="0" step="0.01" required value="${budget.total}"></div>
+          <div class="field"><label>Ya aportado</label><input type="number" name="initial" min="0" step="0.01" value="${budget.paid}"></div>
+        </div>
+        <div class="field"><label>¿Para cuándo quieren tenerlo?</label><input type="date" name="targetDate" required min="${todayISO()}"></div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" data-action="close-modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Crear plan</button>
+        </div>
+      </form>
+    `);
+    document.getElementById('capitalPlanForm').addEventListener('submit', async(e)=>{
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.target).entries());
+      if(await runAction(()=>createCapitalPlan(venture,data), 'Plan de ahorro creado', 'No se pudo crear el plan de ahorro.')) closeModal();
+    });
+  }
+
+  function handleVentureAction(action, id, btn){
+    const idea = state.ideas.find(item=>item.id===id);
+    const venture = state.ventures.find(item=>item.id===id);
+    const budgetItem = state.budgetItems.find(item=>item.id===id);
+    if(action==='new-idea') openIdeaForm(null);
+    else if(action==='edit-idea' && idea) openIdeaForm(idea);
+    else if(action==='vote-idea' && idea) openIdeaVote(idea);
+    else if(action==='idea-to-venture' && idea) openVentureForm(null, idea);
+    else if(action==='discard-idea' && idea){
+      runAction(()=>setIdeaStatus(id,'descartada'), 'Idea descartada', 'No se pudo descartar la idea.').then(ok=>ok && closeModal());
+    }
+    else if(action==='restore-idea') runAction(()=>setIdeaStatus(id,'activa'), 'Idea recuperada', 'No se pudo recuperar la idea.');
+    else if(action==='delete-idea'){
+      if(confirm('¿Eliminar esta idea y sus votos?')) runAction(()=>removeIdea(id), 'Idea eliminada', 'No se pudo eliminar la idea.');
+    }
+    else if(action==='open-venture'){ activeVentureId = id; render(); window.scrollTo(0,0); }
+    else if(action==='close-venture'){ activeVentureId = null; render(); }
+    else if(action==='edit-venture' && venture) openVentureForm(venture, null);
+    else if(action==='delete-venture' && venture){
+      if(!confirm('¿Eliminar este proyecto y su presupuesto? La idea vuelve al banco y el plan de ahorro vinculado se conserva.')) return true;
+      runAction(async()=>{ await removeVenture(venture); activeVentureId = null; }, 'Proyecto eliminado', 'No se pudo eliminar el proyecto.').then(ok=>ok && closeModal());
+    }
+    else if(action==='set-stage' && venture && venture.stage!==btn.dataset.stage){
+      const stage = VENTURE_STAGES.find(item=>item.key===btn.dataset.stage);
+      const advanced = VENTURE_STAGES.indexOf(stage) > VENTURE_STAGES.findIndex(item=>item.key===venture.stage);
+      runAction(()=>updateVenture(id,{stage:stage.key}), advanced ? `🎉 ¡Llegaron a: ${stage.label}!` : `Etapa: ${stage.label}`, 'No se pudo cambiar la etapa.');
+    }
+    else if(action==='new-budget-item') openBudgetItemForm(id, null);
+    else if(action==='edit-budget-item' && budgetItem) openBudgetItemForm(budgetItem.ventureId, budgetItem);
+    else if(action==='toggle-paid' && budgetItem) runAction(()=>setBudgetItemPaid(id,!budgetItem.paid), null, 'No se pudo actualizar la partida.');
+    else if(action==='delete-budget-item'){
+      if(confirm('¿Eliminar esta partida?')) runAction(()=>removeBudgetItem(id), 'Partida eliminada', 'No se pudo eliminar la partida.').then(ok=>ok && closeModal());
+    }
+    else if(action==='new-capital-plan' && venture) openCapitalPlanForm(venture);
+    else if(action==='sync-capital-plan' && venture && venture.planId){
+      runAction(()=>updatePlanTarget(venture.planId, ventureBudget(venture).total), 'Meta actualizada', 'No se pudo actualizar la meta.');
+    }
+    else return false;
+    return true;
+  }
+
   /* ---------------- EVENTS ---------------- */
   function attachViewEvents(){
     document.querySelectorAll('[data-action="goto-plans"]').forEach(b=>b.addEventListener('click', ()=>setView('plans')));
@@ -1550,6 +2183,7 @@
     if(!btn) return;
     const action = btn.dataset.action;
     const id = btn.dataset.id;
+    if(handleVentureAction(action, id, btn)) return;
     if(action==='new-plan') openPlanForm(null);
     else if(action==='edit-plan') openPlanForm(state.plans.find(p=>p.id===id));
     else if(action==='view-plan') openDetail(id);
