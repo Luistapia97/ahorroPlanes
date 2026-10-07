@@ -136,6 +136,35 @@ create table if not exists public.venture_tasks (
   created_at timestamptz not null default now()
 );
 
+-- Fase 3: sincronización de tareas con Google Calendar (cada evento vive en el calendario de quien lo sincronizó)
+alter table public.venture_tasks add column if not exists google_event_id text;
+alter table public.venture_tasks add column if not exists google_synced_by uuid references auth.users(id) on delete set null;
+
+-- Módulo Emprende (fase 3): finanzas del negocio y revisión semanal
+create table if not exists public.venture_transactions (
+  id uuid primary key default gen_random_uuid(),
+  venture_id uuid not null references public.ventures(id) on delete cascade,
+  kind text not null check (kind in ('ingreso', 'gasto')),
+  concept text not null check (char_length(concept) between 1 and 120),
+  amount numeric(12,2) not null check (amount > 0),
+  date date not null default current_date,
+  created_by uuid not null references auth.users(id) default auth.uid(),
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.venture_reviews (
+  id uuid primary key default gen_random_uuid(),
+  venture_id uuid not null references public.ventures(id) on delete cascade,
+  week_start date not null,
+  achieved text not null default '',
+  blockers text not null default '',
+  priority text not null default '',
+  created_by uuid not null references auth.users(id) default auth.uid(),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (venture_id, week_start)
+);
+
 alter table public.plans enable row level security;
 alter table public.contributions enable row level security;
 alter table public.activities enable row level security;
@@ -147,6 +176,8 @@ alter table public.idea_votes enable row level security;
 alter table public.ventures enable row level security;
 alter table public.venture_budget_items enable row level security;
 alter table public.venture_tasks enable row level security;
+alter table public.venture_transactions enable row level security;
+alter table public.venture_reviews enable row level security;
 
 drop policy if exists "authenticated users can read plans" on public.plans;
 create policy "authenticated users can read plans" on public.plans for select to authenticated using (true);
@@ -252,6 +283,24 @@ create policy "authenticated users can update venture tasks" on public.venture_t
 drop policy if exists "authenticated users can delete venture tasks" on public.venture_tasks;
 create policy "authenticated users can delete venture tasks" on public.venture_tasks for delete to authenticated using (true);
 
+drop policy if exists "authenticated users can read venture transactions" on public.venture_transactions;
+create policy "authenticated users can read venture transactions" on public.venture_transactions for select to authenticated using (true);
+drop policy if exists "authenticated users can create venture transactions" on public.venture_transactions;
+create policy "authenticated users can create venture transactions" on public.venture_transactions for insert to authenticated with check (created_by = auth.uid() and exists (select 1 from public.ventures where id = venture_id));
+drop policy if exists "authenticated users can update venture transactions" on public.venture_transactions;
+create policy "authenticated users can update venture transactions" on public.venture_transactions for update to authenticated using (true) with check (true);
+drop policy if exists "authenticated users can delete venture transactions" on public.venture_transactions;
+create policy "authenticated users can delete venture transactions" on public.venture_transactions for delete to authenticated using (true);
+
+drop policy if exists "authenticated users can read venture reviews" on public.venture_reviews;
+create policy "authenticated users can read venture reviews" on public.venture_reviews for select to authenticated using (true);
+drop policy if exists "authenticated users can create venture reviews" on public.venture_reviews;
+create policy "authenticated users can create venture reviews" on public.venture_reviews for insert to authenticated with check (created_by = auth.uid() and exists (select 1 from public.ventures where id = venture_id));
+drop policy if exists "authenticated users can update venture reviews" on public.venture_reviews;
+create policy "authenticated users can update venture reviews" on public.venture_reviews for update to authenticated using (true) with check (true);
+drop policy if exists "authenticated users can delete venture reviews" on public.venture_reviews;
+create policy "authenticated users can delete venture reviews" on public.venture_reviews for delete to authenticated using (true);
+
 alter table public.plans replica identity full;
 alter table public.contributions replica identity full;
 alter table public.activities replica identity full;
@@ -263,6 +312,8 @@ alter table public.idea_votes replica identity full;
 alter table public.ventures replica identity full;
 alter table public.venture_budget_items replica identity full;
 alter table public.venture_tasks replica identity full;
+alter table public.venture_transactions replica identity full;
+alter table public.venture_reviews replica identity full;
 
 do $$
 begin
@@ -344,5 +395,15 @@ begin
     select 1 from pg_publication_rel pr join pg_class c on c.oid = pr.prrelid join pg_namespace n on n.oid = c.relnamespace join pg_publication p on p.oid = pr.prpubid
     where p.pubname = 'supabase_realtime' and n.nspname = 'public' and c.relname = 'venture_tasks'
   ) then alter publication supabase_realtime add table public.venture_tasks; end if;
+
+  if not exists (
+    select 1 from pg_publication_rel pr join pg_class c on c.oid = pr.prrelid join pg_namespace n on n.oid = c.relnamespace join pg_publication p on p.oid = pr.prpubid
+    where p.pubname = 'supabase_realtime' and n.nspname = 'public' and c.relname = 'venture_transactions'
+  ) then alter publication supabase_realtime add table public.venture_transactions; end if;
+
+  if not exists (
+    select 1 from pg_publication_rel pr join pg_class c on c.oid = pr.prrelid join pg_namespace n on n.oid = c.relnamespace join pg_publication p on p.oid = pr.prpubid
+    where p.pubname = 'supabase_realtime' and n.nspname = 'public' and c.relname = 'venture_reviews'
+  ) then alter publication supabase_realtime add table public.venture_reviews; end if;
 end
 $$;
