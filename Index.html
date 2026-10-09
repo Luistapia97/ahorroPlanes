@@ -311,6 +311,7 @@
   .cycle-day-label.confirmed{color:#2f6f8f;}
   .signal-hint{font-weight:500;color:var(--ink-faint);font-size:11.5px;}
   .signals-title{font-family:var(--font-display);font-size:15px;font-weight:600;margin:6px 0 4px;}
+  .signal-more summary{cursor:pointer;font-size:12.5px;font-weight:700;color:var(--ink-soft);}
   .signals-note{font-size:11.5px;color:var(--ink-faint);margin:0 0 12px;line-height:1.4;}
   .estimate-tag{font-size:10px;font-weight:700;color:var(--ink-faint);}
   .cycle-day.predicted{box-shadow:inset 0 0 0 2px var(--coral);background:#fff9f6;}
@@ -643,7 +644,8 @@
         protectionUsed:log.protection_used===null?null:!!log.protection_used,
         lhTest:log.lh_test||'none',
         cervicalMucus:log.cervical_mucus||'none',
-        bbt:log.bbt==null ? null : Number(log.bbt)
+        bbt:log.bbt==null ? null : Number(log.bbt),
+        ovulationPain:!!log.ovulation_pain
       }))
     }};
   }
@@ -1254,7 +1256,7 @@
       const mean=values.reduce((sum,value)=>sum+value,0)/values.length;
       return Math.sqrt(values.reduce((sum,value)=>sum+(value-mean)**2,0)/values.length);
     },
-    // Detecta la ovulación de un ciclo con la mejor señal disponible: prueba LH > temperatura basal > moco cervical.
+    // Detecta la ovulación de un ciclo con la mejor señal disponible: prueba LH > temperatura basal > moco cervical > dolor de ovulación.
     detectOvulation(cycle, dailyLogs){
       const logs=dailyLogs.filter(log=>log.date>=cycle.startDate && (!cycle.endDate || log.date<cycle.endDate)).sort((a,b)=>a.date.localeCompare(b.date));
       // La ovulación suele ocurrir entre 24 y 36 h después del primer positivo de LH. Se ignoran positivos muy tempranos.
@@ -1270,6 +1272,8 @@
       const fertileTypes=['eggwhite','watery'];
       const peak=logs.filter(log=>fertileTypes.includes(log.cervicalMucus)).pop();
       if(peak && logs.some(log=>log.date>peak.date && log.cervicalMucus!=='none' && !fertileTypes.includes(log.cervicalMucus))) return {date:peak.date, source:'mucus'};
+      const pain=logs.find(log=>log.ovulationPain && this.daysBetween(cycle.startDate,log.date)>=7);
+      if(pain) return {date:pain.date, source:'pain'};
       return null;
     },
     // Fase lútea personal (de la ovulación al siguiente periodo) con ciclos ya cerrados. Valor típico: 14 días.
@@ -1293,7 +1297,8 @@
         // Con la ovulación detectada, el periodo llega una fase lútea después; la fase lútea varía poco.
         ovulation=detected.date;
         nextPeriod=this.addDays(ovulation,luteal.length);
-        margin=1;
+        // LH y temperatura ubican la ovulación con ±1 día; el moco y el dolor son menos precisos.
+        margin=['lh','bbt'].includes(detected.source) ? 1 : 2;
         fertileStart=this.addDays(ovulation,-5);
         fertileEnd=this.addDays(ovulation,1);
       } else {
@@ -1357,7 +1362,8 @@
       protection_used:data.hadSex ? !!data.protectionUsed : null,
       lh_test:data.lhTest||'none',
       cervical_mucus:data.cervicalMucus||'none',
-      bbt:data.bbt ? Number(data.bbt) : null
+      bbt:data.bbt ? Number(data.bbt) : null,
+      ovulation_pain:!!data.ovulationPain
     };
     const {error:logError}=await supabase.from('daily_logs').upsert(log,{onConflict:'user_id,date'});
     if(logError) throw logError;
@@ -1834,7 +1840,7 @@
       </div>`;
   }
 
-  const OVULATION_SOURCES={lh:'prueba LH', bbt:'temperatura', mucus:'moco cervical'};
+  const OVULATION_SOURCES={lh:'prueba LH', bbt:'temperatura', mucus:'moco cervical', pain:'dolor de ovulación'};
 
   function nextPeriodText(prediction, today){
     const days=MenstrualEngineService.daysBetween(today,prediction.nextPeriod);
@@ -1845,7 +1851,7 @@
 
   function predictionBasisText(prediction){
     const cycles=prediction.cycleCount ? `${prediction.cycleCount} ciclo${prediction.cycleCount===1?'':'s'} completo${prediction.cycleCount===1?'':'s'}` : 'valores típicos (aún no hay ciclos completos)';
-    const luteal=prediction.luteal.fromData ? `fase lútea de ${prediction.luteal.length} días según tus señales` : 'fase lútea típica de 14 días; registra pruebas LH, temperatura o moco para afinarla';
+    const luteal=prediction.luteal.fromData ? `fase lútea de ${prediction.luteal.length} días según tus señales` : 'fase lútea típica de 14 días; registra tu moco cervical a mitad del ciclo para afinarla';
     return `Calculado con ${cycles} y ${luteal}.`;
   }
 
@@ -2160,11 +2166,15 @@
     const periodCycle=MenstrualEngineService.getCycleForPeriodDate(state.menstrual.cycles,date);
     const isPeriodEnd=!!periodCycle && periodCycle.periodEndDate===date;
     const lhOptions=[['none','No me hice'],['negative','Negativa'],['positive','Positiva']].map(([value,label])=>`<label><input type="radio" name="lhTest" value="${value}" ${(existing?.lhTest||'none')===value?'checked':''}><span>${label}</span></label>`).join('');
-    const mucusOptions=[['none','Sin registrar'],['dry','Seco'],['sticky','Pegajoso'],['creamy','Cremoso'],['watery','Acuoso'],['eggwhite','Clara de huevo']].map(([value,label])=>`<label><input type="radio" name="cervicalMucus" value="${value}" ${(existing?.cervicalMucus||'none')===value?'checked':''}><span>${label}</span></label>`).join('');
+    const mucusOptions=[['none','No me fijé'],['dry','Seco'],['creamy','Pegajoso o cremoso'],['watery','Húmedo, acuoso'],['eggwhite','Elástico, como clara de huevo']].map(([value,label])=>{
+      // Los registros antiguos "pegajoso" se muestran dentro de "pegajoso o cremoso".
+      const current=existing?.cervicalMucus==='sticky' ? 'creamy' : (existing?.cervicalMucus||'none');
+      return `<label><input type="radio" name="cervicalMucus" value="${value}" ${current===value?'checked':''}><span>${label}</span></label>`;
+    }).join('');
     const flow=FLOW_OPTIONS.map(([value,label])=>`<label><input type="radio" name="flowIntensity" value="${value}" ${selectedFlow===value?'checked':''}><span>${label}</span></label>`).join('');
     const choices=(items,selected,name)=>items.map(([value,label])=>`<label><input type="checkbox" name="${name}" value="${value}" ${(selected||[]).includes(value)?'checked':''}><span>${label}</span></label>`).join('');
     openModal(`<div class="modal-head"><h2 class="modal-title">Registro del ${fmtDate(date)}</h2><button class="modal-close" data-action="close-modal">✕</button></div>
-      <form id="dailyTrackingForm"><div class="field"><label>Flujo</label><div class="choice-grid">${flow}</div></div><div class="field"><div class="sex-toggle"><label for="periodEnd">Fue el último día de sangrado de este periodo</label><input id="periodEnd" type="checkbox" name="periodEnd" ${isPeriodEnd?'checked':''}></div></div><div class="field"><label>Estado de ánimo</label><div class="chip-grid">${choices(MOOD_OPTIONS,existing?.mood,'mood')}</div></div><div class="field"><label>Síntomas</label><div class="chip-grid">${choices(SYMPTOM_OPTIONS,existing?.symptoms,'symptoms')}</div></div><h3 class="signals-title">Señales de ovulación</h3><p class="signals-note">Opcionales. Con ellas la app detecta cuándo ovulaste y aprende tu ciclo.</p><div class="field"><label>Prueba de ovulación (LH)</label><div class="choice-grid">${lhOptions}</div></div><div class="field"><label>Moco cervical</label><div class="chip-grid">${mucusOptions}</div></div><div class="field"><label for="bbtInput">Temperatura basal (°C) <span class="signal-hint">· al despertar, antes de levantarte</span></label><input id="bbtInput" type="number" name="bbt" min="34" max="40" step="0.01" placeholder="36.45" value="${existing?.bbt ?? ''}"></div><div class="field"><div class="sex-toggle"><label for="hadSex">¿Hubo relaciones sexuales este día?</label><input id="hadSex" type="checkbox" name="hadSex" ${hadSex?'checked':''}></div><div class="sex-toggle" id="protectionRow" style="display:${hadSex?'flex':'none'};"><label for="protectionUsed">¿Se cuidaron?</label><input id="protectionUsed" type="checkbox" name="protectionUsed" ${protectionUsed?'checked':''}></div></div><div class="modal-actions">${existing?`<button type="button" class="btn btn-ghost" data-action="delete-daily-log" data-id="${existing.id}" style="color:var(--coral);margin-right:auto;">Eliminar</button>`:''}<button type="button" class="btn btn-ghost" data-action="close-modal">Cancelar</button><button type="submit" class="btn btn-primary">Guardar registro</button></div></form>`);
+      <form id="dailyTrackingForm"><div class="field"><label>Flujo</label><div class="choice-grid">${flow}</div></div><div class="field"><div class="sex-toggle"><label for="periodEnd">Fue el último día de sangrado de este periodo</label><input id="periodEnd" type="checkbox" name="periodEnd" ${isPeriodEnd?'checked':''}></div></div><div class="field"><label>Estado de ánimo</label><div class="chip-grid">${choices(MOOD_OPTIONS,existing?.mood,'mood')}</div></div><div class="field"><label>Síntomas</label><div class="chip-grid">${choices(SYMPTOM_OPTIONS,existing?.symptoms,'symptoms')}</div></div><h3 class="signals-title">Señales de ovulación</h3><p class="signals-note">Opcionales. Con ellas la app detecta cuándo ovulaste y aprende tu ciclo.</p><div class="field"><label>Moco cervical <span class="signal-hint">· fíjate al ir al baño, en el papel</span></label><div class="chip-grid">${mucusOptions}</div></div><div class="field"><div class="sex-toggle"><label for="ovulationPain">Dolor de ovulación <span class="signal-hint">· molestia en un lado del vientre</span></label><input id="ovulationPain" type="checkbox" name="ovulationPain" ${existing?.ovulationPain?'checked':''}></div></div><details class="field signal-more" ${existing?.lhTest && existing.lhTest!=='none'?'open':''}><summary>Tengo pruebas de ovulación (LH)</summary><div class="choice-grid" style="margin-top:10px;">${lhOptions}</div></details><details class="field signal-more" ${existing?.bbt?'open':''}><summary>Tengo termómetro (temperatura basal)</summary><label for="bbtInput" style="margin-top:10px;">Temperatura al despertar, antes de levantarte (°C)</label><input id="bbtInput" type="number" name="bbt" min="34" max="40" step="0.01" placeholder="36.45" value="${existing?.bbt ?? ''}"></details><div class="field"><div class="sex-toggle"><label for="hadSex">¿Hubo relaciones sexuales este día?</label><input id="hadSex" type="checkbox" name="hadSex" ${hadSex?'checked':''}></div><div class="sex-toggle" id="protectionRow" style="display:${hadSex?'flex':'none'};"><label for="protectionUsed">¿Se cuidaron?</label><input id="protectionUsed" type="checkbox" name="protectionUsed" ${protectionUsed?'checked':''}></div></div><div class="modal-actions">${existing?`<button type="button" class="btn btn-ghost" data-action="delete-daily-log" data-id="${existing.id}" style="color:var(--coral);margin-right:auto;">Eliminar</button>`:''}<button type="button" class="btn btn-ghost" data-action="close-modal">Cancelar</button><button type="submit" class="btn btn-primary">Guardar registro</button></div></form>`);
     const hadSexInput=document.getElementById('hadSex');
     const protectionRow=document.getElementById('protectionRow');
     hadSexInput.addEventListener('change',()=>{
@@ -2175,7 +2185,7 @@
       event.preventDefault();
       const form=new FormData(event.target);
       const hadSexNow=form.get('hadSex')==='on';
-      const data={date,flowIntensity:form.get('flowIntensity')||'none',mood:form.getAll('mood'),symptoms:form.getAll('symptoms'),hadSex:hadSexNow,protectionUsed:hadSexNow ? form.get('protectionUsed')==='on' : null,periodEnd:form.get('periodEnd')==='on',lhTest:form.get('lhTest')||'none',cervicalMucus:form.get('cervicalMucus')||'none',bbt:form.get('bbt')||null};
+      const data={date,flowIntensity:form.get('flowIntensity')||'none',mood:form.getAll('mood'),symptoms:form.getAll('symptoms'),hadSex:hadSexNow,protectionUsed:hadSexNow ? form.get('protectionUsed')==='on' : null,periodEnd:form.get('periodEnd')==='on',lhTest:form.get('lhTest')||'none',cervicalMucus:form.get('cervicalMucus')||'none',bbt:form.get('bbt')||null,ovulationPain:form.get('ovulationPain')==='on'};
       try{ await saveDailyLog(data); showToast('Registro guardado'); closeModal(); render(); }
       catch(error){ showToast('No se pudo guardar el registro.'); }
     });

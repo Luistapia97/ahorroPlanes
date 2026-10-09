@@ -89,6 +89,8 @@ alter table public.daily_logs add constraint daily_logs_cervical_mucus_check che
 alter table public.daily_logs add column if not exists bbt numeric(4,2);
 alter table public.daily_logs drop constraint if exists daily_logs_bbt_check;
 alter table public.daily_logs add constraint daily_logs_bbt_check check (bbt is null or bbt between 34 and 40);
+-- Dolor de ovulación (molestia en un lado del vientre a mitad del ciclo): señal débil, solo se usa si no hay otra.
+alter table public.daily_logs add column if not exists ovulation_pain boolean not null default false;
 
 -- Módulo Emprende (fase 1): banco de ideas, votos, proyectos y presupuesto de arranque
 create table if not exists public.ideas (
