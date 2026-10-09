@@ -55,6 +55,11 @@ create table if not exists public.cycles (
   check (end_date is null or end_date >= start_date)
 );
 
+-- Último día de sangrado del periodo (end_date es el cierre del ciclo completo, cuando inicia el siguiente).
+alter table public.cycles add column if not exists period_end_date date;
+alter table public.cycles drop constraint if exists cycles_period_end_check;
+alter table public.cycles add constraint cycles_period_end_check check (period_end_date is null or (period_end_date >= start_date and period_end_date <= start_date + 13));
+
 create table if not exists public.daily_logs (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -73,6 +78,17 @@ alter table public.daily_logs add column if not exists had_sex boolean not null 
 alter table public.daily_logs add column if not exists protection_used boolean;
 alter table public.daily_logs drop constraint if exists daily_logs_sex_protection_check;
 alter table public.daily_logs add constraint daily_logs_sex_protection_check check ((had_sex = false and protection_used is null) or had_sex = true);
+
+-- Señales de ovulación: prueba de LH, moco cervical y temperatura basal (°C).
+alter table public.daily_logs add column if not exists lh_test text not null default 'none';
+alter table public.daily_logs drop constraint if exists daily_logs_lh_test_check;
+alter table public.daily_logs add constraint daily_logs_lh_test_check check (lh_test in ('none', 'negative', 'positive'));
+alter table public.daily_logs add column if not exists cervical_mucus text not null default 'none';
+alter table public.daily_logs drop constraint if exists daily_logs_cervical_mucus_check;
+alter table public.daily_logs add constraint daily_logs_cervical_mucus_check check (cervical_mucus in ('none', 'dry', 'sticky', 'creamy', 'watery', 'eggwhite'));
+alter table public.daily_logs add column if not exists bbt numeric(4,2);
+alter table public.daily_logs drop constraint if exists daily_logs_bbt_check;
+alter table public.daily_logs add constraint daily_logs_bbt_check check (bbt is null or bbt between 34 and 40);
 
 -- Módulo Emprende (fase 1): banco de ideas, votos, proyectos y presupuesto de arranque
 create table if not exists public.ideas (
